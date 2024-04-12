@@ -120,11 +120,10 @@ elif analysis_type == 'gaussian':
             launch_rail_angle
         )
         rocket = rktClass.Rocket(
-            Hyperion.L_rocket,
-            Hyperion.A_rocket,
             rocket_dry_mass,
             Hyperion.motor,
-            Hyperion.Cd_rocket_at_Re,
+            Hyperion.A_rocket,
+            Hyperion.Cd_rocket_at_Ma,
             Hyperion.h_second_rail_button
         )
         apogee, max_q, max_mach = run_simulation(rocket, launch_condition)

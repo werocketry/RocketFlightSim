@@ -40,6 +40,7 @@ exponent_constant = con.F_g_over_R_spec_air_T_lapse_rate - 1
 - Might be able to also look into not recalculating the Mach number as often, because for some parts of the Cd(Ma) curve, the drag coefficient doesn't change much
 - Optimize Cd(Ma) function to precombine the constants
 - Look at helper_functions.py and note where np.interp might be faster
+- all constants will be hardcoded
 """
 
 def simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, launchpad_temp, multiplier, exponent_constant, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle = 0, timestep=0.01):
@@ -125,19 +126,15 @@ def simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, l
 if __name__ == "__main__":
 
     pass 
-    # import numpy as np
 
-    # thirty_deg_rad = np.deg2rad(30)
-    # # print(thirty_deg_rad)
-
-    # apogee = simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, launchpad_temp, multiplier, exponent_constant, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=thirty_deg_rad, timestep=0.1)
+    # apogee = simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, launchpad_temp, multiplier, exponent_constant, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=np.deg2rad(30), timestep=0.1)
     # print(apogee*3.28084)
 
 
     # import time
     # time1 = time.time()
     # for i in range(10000):
-    #     simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, launchpad_temp, multiplier, exponent_constant, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=0.523599, timestep=0.1)
+    #     simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, launchpad_temp, multiplier, exponent_constant, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=np.deg2rad(30), timestep=0.1)
     #     if i % 100 == 0:
     #         print(i)
     # time2 = time.time()

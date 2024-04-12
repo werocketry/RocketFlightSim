@@ -3,14 +3,14 @@ class Motor:
     """
     dry_mass: mass of the motor without fuel (kg)
     thrust_curve: dictionary of thrust (N) at time (s after ignition)
-    mass_curve: dictionary of mass (kg) at time (s after ignition) # TODO: rename to fuel_mass_curve
+    fuel_mass_curve: dictionary of mass (kg) at time (s after ignition)
     burn_time: time it takes for the motor to burn all of its fuel (s)
     """
 
     def __init__(self, dry_mass, thrust_curve, fuel_mass_curve):
         self.dry_mass = dry_mass
         self.thrust_curve = thrust_curve
-        self.mass_curve = fuel_mass_curve
+        self.fuel_mass_curve = fuel_mass_curve
         self.burn_time = max(thrust_curve.keys())
 
 

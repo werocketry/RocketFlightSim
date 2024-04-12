@@ -1,6 +1,7 @@
 import numpy as np
 import constants as con
 
+# aerodynamics
 
 def temp_at_height(h, launchpad_temp):
     """
@@ -56,7 +57,34 @@ def air_density_optimized(temp, const1, const2):
     """
     return const1 * pow(temp, const2)
 
-def lookup_dynamic_viscosity(temp): # TODO: is np.interp more efficient?
+def calculate_dynamic_pressure(air_density, speed):
+    """
+    Calculate the dynamic pressure imparted on a solid moving through a fluid.
+
+    Args:
+    - air_density (float): The density of the fluid.
+    - speed (float): The relative speed of the solid and the fluid.
+
+    Returns:
+    - float: The dynamic pressure on the solid.
+    """
+    return 0.5 * air_density * (speed ** 2)
+
+def mach_number_fn(v, temp):
+    """
+    Calculate the Mach number of an object moving in air at a given temperature.
+
+    Args:
+    - v (float): Velocity in meters per second.
+    - temp (float): Temperature in Kelvin.
+
+    Returns:
+    - float: Mach number (dimensionless).
+    """
+    return v / np.sqrt(con.adiabatic_index_air_times_R_specific_air * temp)
+
+# not used anymore
+def lookup_dynamic_viscosity(temp):
     """
     Look up the dynamic viscosity of air at a given temperature.
 
@@ -69,54 +97,31 @@ def lookup_dynamic_viscosity(temp): # TODO: is np.interp more efficient?
     Source of lookup table: https://www.me.psu.edu/cimbala/me433/Links/Table_A_9_CC_Properties_of_Air.pdf
     Temperatures converted from source (Celsius to Kelvin).
     """
-    one_atm_air_dynamic_viscosity_lookup = {
-        173.15: 1.189e-6,
-        223.15: 1.474e-5,
-        233.15: 1.527e-5,
-        243.15: 1.579e-5,
-        253.15: 1.630e-5,
-        263.15: 1.680e-5,
-        273.15: 1.729e-5,
-        278.15: 1.754e-5,
-        283.15: 1.778e-5,
-        288.15: 1.802e-5,
-        293.15: 1.825e-5,
-        298.15: 1.849e-5,
-        303.15: 1.872e-5,
-        308.15: 1.895e-5,
-        313.15: 1.918e-5,
-        318.15: 1.941e-5,
-        323.15: 1.963e-5,
-        333.15: 2.008e-5,
-        343.15: 2.052e-5,
-    }
-    temp_list = list(one_atm_air_dynamic_viscosity_lookup.keys())
-    if temp <= temp_list[0]:
-        return one_atm_air_dynamic_viscosity_lookup[temp_list[0]]
-    elif temp >= temp_list[-1]:
-        return one_atm_air_dynamic_viscosity_lookup[temp_list[-1]]
-    else:
-        lower_temp = max([t for t in temp_list if t < temp])
-        upper_temp = min([t for t in temp_list if t > temp])
-        lower_viscosity = one_atm_air_dynamic_viscosity_lookup[lower_temp]
-        upper_viscosity = one_atm_air_dynamic_viscosity_lookup[upper_temp]
-        return lower_viscosity + (temp - lower_temp) * (upper_viscosity - lower_viscosity) / (upper_temp - lower_temp)
+    # Lookup table for dynamic viscosity
+    temps = np.array([173.15, 223.15, 233.15, 243.15, 253.15, 263.15, 273.15, 278.15, 283.15, 288.15, 293.15, 298.15, 303.15, 308.15, 313.15, 318.15, 323.15, 333.15, 343.15])
+    viscosities = np.array([1.189e-6, 1.474e-5, 1.527e-5, 1.579e-5, 1.630e-5, 1.680e-5, 1.729e-5, 1.754e-5, 1.778e-5, 1.802e-5, 1.825e-5, 1.849e-5, 1.872e-5, 1.895e-5, 1.918e-5, 1.941e-5, 1.963e-5, 2.008e-5, 2.052e-5])
     
-def mach_number_fn(v, temp):
+    # Interpolate
+    viscosity = np.interp(temp, temps, viscosities)
+    return viscosity
+def calculate_reynolds_number(air_density, speed, len_characteristic, dynamic_viscosity):
     """
-    Calculate the Mach number of an object moving in air at a given temperature.
+    Calculate the Reynolds number of a solid moving through air.
 
     Args:
-    - v (float): Velocity in meters per second.
-    - temp (float): Temperature in Kelvin.
+    - air_density (float): The density of the air.
+    - speed (float): The relative speed of the solid and the air.
+    - len_characteristic (float): The characteristic length of the solid.
+    - dynamic_viscosity (float): The dynamic viscosity of the air.
 
     Returns:
-    - float: Mach number (dimensionless).
+    - float: The Reynolds number of the solid.
     """
-    return v / np.sqrt(1.4 * con.R_specific_air * temp)
+    return (air_density * speed * len_characteristic) / dynamic_viscosity
 
-
-def mass_at_time(time, dry_mass, fuel_mass_lookup): # TODO: # is np.interp more efficient?
+# motor burn curves
+    # both likely to either not be used in simulator on the MCU, or to be rewritten to be more efficient
+def mass_at_time(time, dry_mass, fuel_mass_lookup):
     """
     Calculate the total mass of the rocket at a given time during motor burn.
 
@@ -134,8 +139,7 @@ def mass_at_time(time, dry_mass, fuel_mass_lookup): # TODO: # is np.interp more 
     lower_mass = fuel_mass_lookup[lower_time]
     upper_mass = fuel_mass_lookup[upper_time]
     return (dry_mass + lower_mass + (time - lower_time) * (upper_mass - lower_mass) / (upper_time - lower_time))
-
-def thrust_at_time(time, engine_thrust_lookup): # TODO: is np.interp more efficient?
+def thrust_at_time(time, engine_thrust_lookup): 
     """
     Calculate the thrust of the rocket engine at a given time during motor burn.
 
@@ -152,32 +156,3 @@ def thrust_at_time(time, engine_thrust_lookup): # TODO: is np.interp more effici
     lower_thrust = engine_thrust_lookup[lower_time]
     upper_thrust = engine_thrust_lookup[upper_time]
     return lower_thrust + (time - lower_time) * (upper_thrust - lower_thrust) / (upper_time - lower_time)
-
-def calculate_reynolds_number(air_density, speed, len_characteristic, dynamic_viscosity):
-    """
-    Calculate the Reynolds number of a solid moving through air.
-
-    Args:
-    - air_density (float): The density of the air.
-    - speed (float): The relative speed of the solid and the air.
-    - len_characteristic (float): The characteristic length of the solid.
-    - dynamic_viscosity (float): The dynamic viscosity of the air.
-
-    Returns:
-    - float: The Reynolds number of the solid.
-    """
-    return (air_density * speed * len_characteristic) / dynamic_viscosity
-
-
-def calculate_dynamic_pressure(air_density, speed):
-    """
-    Calculate the dynamic pressure imparted on a solid moving through a fluid.
-
-    Args:
-    - air_density (float): The density of the fluid.
-    - speed (float): The relative speed of the solid and the fluid.
-
-    Returns:
-    - float: The dynamic pressure on the solid.
-    """
-    return 0.5 * air_density * (speed ** 2)

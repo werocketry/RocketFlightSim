@@ -31,7 +31,7 @@ def simulate_flight(rocket=Prometheus, launch_conditions=Prometheus_launch_condi
 
     # Initialize rocket parameters and launch conditions
     dry_mass = rocket.dry_mass
-    fuel_mass_lookup = rocket.motor.mass_curve
+    fuel_mass_lookup = rocket.motor.fuel_mass_curve
     engine_thrust_lookup = rocket.motor.thrust_curve
     Cd_A_rocket_fn = rocket.Cd_A_rocket
     burnout_time = rocket.motor.burn_time
