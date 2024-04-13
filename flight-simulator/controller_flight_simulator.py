@@ -38,7 +38,6 @@ multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, con.
 """
 - Might be able to also look into not recalculating the Mach number as often, because for some parts of the Cd(Ma) curve, the drag coefficient doesn't change much
 - Optimize Cd(Ma) function to precombine the constants
-- Look at helper_functions.py and note where np.interp might be faster
 - all constants will be hardcoded
 """
 

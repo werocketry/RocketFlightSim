@@ -5,7 +5,7 @@ import constants as con
 import numpy as np
 
 # Motor class configurations
-Cesaroni_7579M1520_P = rocket_classes.Motor( 
+Cesaroni_7579M1520_P = rocket_classes.Motor(
     # source: https://www.thrustcurve.org/simfiles/5f4294d20002e900000006b1/
     dry_mass = 2.981,
     thrust_curve = {
@@ -107,10 +107,10 @@ our_Cesaroni_7450M2505_P = rocket_classes.Motor(
     }
 )
 
-# Cd functions
+# Rocket Cd functions
 
 def Prometheus_Cd_at_Ma(mach):
-    """CFD done by Niall in early 2021 using the Prometheus CAD as it was at that time. k-ω model."""
+    """CFD done by Niall in early 2021 using the Prometheus CAD as it was at that time in Star-CCM+. k-ω model."""
     if mach <= 0.15:
         return 0.422
     elif mach <= 0.45:
@@ -136,6 +136,7 @@ def Prometheus_Cd_at_Ma(mach):
     else:
         return 0.39
 
+# TODO: when Shelby's done redoing Prometheus CFD, add her function here, and maybe try to verify A_rocket that should be used when using Niall's function
 
 """ ORK Cd functions
 For demonstrative purposes, here's the Cd functions from the ork files for Prometheus and Hyperion. They are basically indistinguishable.
@@ -213,19 +214,27 @@ def Hyperion_Cd_function_orkV7(Ma):
 
 # Rocket class configurations
 # TODO: add another team's rocket and Cd function, test our sim with it
-Hyperion_2024_03_20 = {
-    # "L_rocket": 2.71,
-    # TODO: when more parts finished, update L_rocket
+Hyperion_2024_04_13 = {
     "A_rocket": 0.015326,# + 0.13 * 0.012 * 3,  # 5.5" diameter circle's area in m^2, plus 3 fins with span of 13cm and thickness of 1.2cm (thickness of Sapphire fins, span as planned)
-        # as best I can tell, it was only the area of the body tube that was fed to Star-CCM+ for the Cd calculation
-    # TODO: when fins made, update A_rocket
-    # TODO: when body tubes sanded, update A_rocket
-    "rocket_mass": 13.462+2,
-    # TODO: continuous refinement of mass budget and updating of the first value. second value is guess at additional mass we'll add to it (heavier infills, coatings, literal weights, etc.) to bring our pre-airbrakes apogee down to ~11k ft
+        # I think it was only the area of the body tube that was fed to Star-CCM+ for the Cd calculation
+        # once using Shelby's CFD model, ensure that the area used here is the same as plugged into Ansys Fluent for its conversion of drag force to Cd
+    "rocket_mass": 13.222+3,
+    # TODO: continuous refinement of mass budget and updating of the first value. second value is guess at additional mass we'll add to it (heavier infills, coatings, literal weights, etc.) to bring our pre-airbrakes apogee down to ~11k ft. Need to do some work on picking that value
     "motor": our_Cesaroni_7450M2505_P,
     "Cd_rocket_at_Ma": Prometheus_Cd_at_Ma,
     "h_second_rail_button": 0.69 # m, distance from bottom of rocket to second rail button, was what Prometheus had
     # TODO: switch to Hyperion's once aero has a final design
+}
+
+Hyperion_2024_03_20 = {
+    # "L_rocket": 2.71, # when more parts finished, update L_rocket
+    "A_rocket": 0.015326,# + 0.13 * 0.012 * 3,  # 5.5" diameter circle's area in m^2, plus 3 fins with span of 13cm and thickness of 1.2cm (thickness of Sapphire fins, span as planned)
+        # I think it was only the area of the body tube that was fed to Star-CCM+ for the Cd calculation
+        # once using Shelby's CFD model, ensure that the area used here is the same as plugged into Ansys Fluent for its conversion of drag force to Cd
+    "rocket_mass": 13.462+2,
+    "motor": our_Cesaroni_7450M2505_P,
+    "Cd_rocket_at_Ma": Prometheus_Cd_at_Ma,
+    "h_second_rail_button": 0.69 # m, distance from bottom of rocket to second rail button, was what Prometheus had
 }
 
 Hyperion_2024_03_19 = {
@@ -274,9 +283,9 @@ Hyperion_2024_01_24 = {
 }
 
 Prometheus = rocket_classes.Rocket(
-    # L_rocket = 2.229,  # length of Prometheus in m # TODO: measure to double check
+    # L_rocket = 2.229,  # length of Prometheus in m # measure to double check
     A_rocket = 0.015326, #+ 0.13 * 0.008 * 3,  # 5.5" diameter circle's area in m^2, plus 3 fins with span of 13cm and thickness of 0.8cm
-        # as best I can tell, it was only the area of the body tube that was fed to Star-CCM+ for the Cd calculation
+        # I think it was only the area of the body tube that was fed to Star-CCM+ for the Cd calculation
     rocket_mass = 13.93,  # kg, from (TODO: CAD? final physical rocket mass? were they the same at the end?)
     motor = Cesaroni_7579M1520_P,
     Cd_rocket_at_Ma = Prometheus_Cd_at_Ma,
@@ -322,5 +331,5 @@ airbrakes_model_2024_03_20 = rocket_classes.Airbrakes(
 )
 
 # Set the default Hyperion configuration
-Hyperion = rocket_classes.Rocket(**Hyperion_2024_03_20)
+Hyperion = rocket_classes.Rocket(**Hyperion_2024_04_13)
 current_airbrakes_model = airbrakes_model_2024_03_20
