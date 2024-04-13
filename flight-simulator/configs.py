@@ -109,87 +109,99 @@ our_Cesaroni_7450M2505_P = rocket_classes.Motor(
 
 # Cd functions
 
-
-# TODO: see if I can get a proper Cd(Ma) for Prometheus instead of this conversion from the Cd(Re) function. Clean this whole thing up
-def Prometheus_Cd_at_Re(Re):
-    """
-    CFD done by Niall in early 2021 using the Prometheus CAD as it was at that time. k-ω model.
-    """
-    if Re <= 1e7:
-        return 0.42
-    elif Re <= 2.8e7:
-        return 0.42 - (Re - 1e7) * (0.42 - 0.4) / (2.8e7 - 1e7)
-    elif Re <= 5e7:
-        return 0.4 - (Re - 2.8e7) * (0.4 - 0.31) / (5e7 - 2.8e7)
-    else:
-        return 0.31
-
-# rough translation of Cd(Re) into a Cd(mach) function
-# assumptions:
-air_temp_for_mach = 20 + 273.15 # assumed constant at 20C (temp about halfway through flight)
-dynamic_viscosity_for_mach = 1.85e-5 # assumed constant at 1.85e-5 (dynamic viscosity at 20C)
-air_density_for_mach = 0.85 # assumed constant at 0.85 kg/m^3 (air density about halfway through flight)
-L_Prometheus = 2.229  # length of Prometheus in m # TODO: measure to double check
-# mach = speed / np.sqrt(1.4 * con.R_specific_air * temp)
-# Re = air_density * speed * len_characteristic / dynamic_viscosity
-# Re = air_density * mach * len_characteristic * np.sqrt(1.4 * con.R_specific_air * temp) / dynamic_viscosity
-
 def Prometheus_Cd_at_Ma(mach):
-    Re = air_density_for_mach * mach * L_Prometheus * np.sqrt(1.4 * con.R_specific_air * air_temp_for_mach) / dynamic_viscosity_for_mach
-    return Prometheus_Cd_at_Re(Re)
+    """CFD done by Niall in early 2021 using the Prometheus CAD as it was at that time. k-ω model."""
+    if mach <= 0.15:
+        return 0.422
+    elif mach <= 0.45:
+        return 0.422 + (mach - 0.15) * (0.38 - 0.422) / (0.45 - 0.15)
+    elif mach <= 0.77:
+        return 0.38 + (mach - 0.45) * (0.32 - 0.38) / (0.77 - 0.45)
+    elif mach <= 0.82:
+        return 0.32 + (mach - 0.77) * (0.3 - 0.32) / (0.82 - 0.77)
+    elif mach <= 0.88:
+        return 0.3 + (mach - 0.82) * (0.3 - 0.3) / (0.88 - 0.82)
+    elif mach <= 0.94:
+        return 0.3 + (mach - 0.88) * (0.32 - 0.3) / (0.94 - 0.88)
+    elif mach <= 0.99:
+        return 0.32 + (mach - 0.94) * (0.37 - 0.32) / (0.99 - 0.94)
+    elif mach <= 1.04:
+        return 0.37 + (mach - 0.99) * (0.44 - 0.37) / (1.04 - 0.99)
+    elif mach <= 1.24:
+        return 0.44 + (mach - 1.04) * (0.43 - 0.44) / (1.24 - 1.04)
+    elif mach <= 1.33:
+        return 0.43 + (mach - 1.24) * (0.42 - 0.43) / (1.33 - 1.24)
+    elif mach <= 1.49:
+        return 0.42 + (mach - 1.33) * (0.39 - 0.42) / (1.49 - 1.33)
+    else:
+        return 0.39
 
-# OpenRocket Cd functions TODO: update to take Ma
-"""
-For demonstrative purposes, here's the Cd function from the ork files for Prometheus and Hyperion. They are basically indistinguishable.
+
+""" ORK Cd functions
+For demonstrative purposes, here's the Cd functions from the ork files for Prometheus and Hyperion. They are basically indistinguishable.
 
 Using the Prometheus one to project the Prometheus flight gives terrible results, doubling the error to about 2000 ft (at least as the sim and ork outputs stood on March 26th). 
 """
-def Prometheus_Cd_function_orkPrometheus_V3_CADUPD(Re):
+def Prometheus_Cd_function_orkPrometheus_V3_CADUPD(Ma):
     """
     Drag coefficient curve given by Prometheus_V3_CADUPD.ork, on flight with Prometheus' launch conditions, but no wind (ascent only). Far less accurate than simply using the Prometheus Cd function.
     """
-    if Re <= 2.2e6:
-        return 0.436
-    elif Re <= 5.01e6:
-        return 0.436 + (Re - 2.2e6) * (0.438 - 0.436) / (5.01e6 - 2.2e6)
-    elif Re <= 1.12e7:
-        return 0.438 + (Re - 5.01e6) * (0.445 - 0.438) / (1.12e7 - 5.01e6)
-    elif Re <= 1.83e7:
-        return 0.445 + (Re - 1.12e7) * (0.47 - 0.445) / (1.83e7 - 1.12e7)
-    elif Re <= 2.46e7:
-        return 0.47 + (Re - 1.83e7) * (0.496 - 0.47) / (2.46e7 - 1.83e7)
-    elif Re <= 3.02e7:
-        return 0.496 + (Re - 2.46e7) * (0.528 - 0.496) / (3.02e7 - 2.46e7)
-    elif Re <= 3.61e7:
-        return 0.528 + (Re - 3.02e7) * (0.576 - 0.528) / (3.61e7 - 3.02e7)
-    elif Re <= 3.88e7:
-        return 0.576 + (Re - 3.61e7) * (0.61 - 0.576) / (3.88e7 - 3.61e7)
-    elif Re <= 4.14e7:
-        return 0.61 + (Re - 3.88e7) * (0.657 - 0.61) / (4.14e7 - 3.88e7)
-    elif Re <= 4.42e7:
-        return 0.657 + (Re - 4.14e7) * (0.652 - 0.657) / (4.42e7 - 4.14e7)
+    if Ma <= 0.033:
+        return 0.422
+    elif Ma <= 0.048:
+        return 0.422 + (Ma - 0.033) * (0.405 - 0.422) / (0.048 - 0.033)
+    elif Ma <= 0.1:
+        return 0.405 + (Ma - 0.048) * (0.406 - 0.405) / (0.1 - 0.048)
+    elif Ma <= 0.205:
+        return 0.406 + (Ma - 0.1) * (0.411 - 0.406) / (0.205 - 0.1)
+    elif Ma <= 0.314:
+        return 0.411 + (Ma - 0.205) * (0.421 - 0.411) / (0.314 - 0.205)
+    elif Ma <= 0.451:
+        return 0.421 + (Ma - 0.314) * (0.44 - 0.421) / (0.451 - 0.314)
+    elif Ma <= 0.602:
+        return 0.44 + (Ma - 0.451) * (0.472 - 0.44) / (0.602 - 0.451)
+    elif Ma <= 0.687:
+        return 0.472 + (Ma - 0.602) * (0.499 - 0.472) / (0.687 - 0.602)
+    elif Ma <= 0.803:
+        return 0.499 + (Ma - 0.687) * (0.552 - 0.499) / (0.803 - 0.687)
+    elif Ma <= 0.824:
+        return 0.552 + (Ma - 0.803) * (0.565 - 0.552) / (0.824 - 0.803)
+    elif Ma <= 0.864:
+        return 0.565 + (Ma - 0.824) * (0.596 - 0.565) / (0.864 - 0.824)
+    elif Ma <= 0.891:
+        return 0.596 + (Ma - 0.864) * (0.625 - 0.596) / (0.891 - 0.864)
+    elif Ma <= 0.904:
+        return 0.625 + (Ma - 0.891) * (0.637 - 0.625) / (0.904 - 0.891)
+    elif Ma <= 0.959:
+        return 0.637 + (Ma - 0.904) * (0.631 - 0.637) / (0.959 - 0.904)
     else:
-        return 0.65
-def Hyperion_Cd_function_orkV7(Re):
+        return 0.63
+def Hyperion_Cd_function_orkV7(Ma):
     """
     Drag coefficient curve given by HyperionV7.ork, on flight with Prometheus' launch conditions, but no wind (ascent only). Likely far less accurate than simply using the Prometheus Cd function.
     """
-    if Re <= 2.2e6:
-        return 0.436
-    elif Re <= 7.64e6:
-        return 0.436 + (Re - 2.2e6) * (0.44 - 0.436) / (7.64e6 - 2.2e6)
-    elif Re <= 1.75e7:
-        return 0.44 + (Re - 7.64e6) * (0.467 - 0.44) / (1.75e7 - 7.64e6)
-    elif Re <= 2.76e7:
-        return 0.467 + (Re - 1.75e7) * (0.512 - 0.467) / (2.76e7 - 1.75e7)
-    elif Re <= 3.41e7:
-        return 0.512 + (Re - 2.76e7) * (0.557 - 0.512) / (3.41e7 - 2.76e7)
-    elif Re <= 3.86e7:
-        return 0.557 + (Re - 3.41e7) * (0.606 - 0.557) / (3.86e7 - 3.41e7)
-    elif Re <= 4.14e7:
-        return 0.606 + (Re - 3.86e7) * (0.657 - 0.606) / (4.14e7 - 3.86e7)
-    elif Re <= 4.48e7:
-        return 0.657 + (Re - 4.14e7) * (0.651 - 0.657) / (4.48e7 - 4.14e7)
+    if Ma <= 0.019:
+        return 0.494
+    elif Ma <= 0.049:
+        return 0.494 + (Ma - 0.019) * (0.436 - 0.494) / (0.049 - 0.019)
+    elif Ma <= 0.104:
+        return 0.436 + (Ma - 0.049) * (0.438 - 0.436) / (0.104 - 0.049)
+    elif Ma <= 0.26:
+        return 0.438 + (Ma - 0.104) * (0.447 - 0.438) / (0.26 - 0.104)
+    elif Ma <= 0.435:
+        return 0.447 + (Ma - 0.26) * (0.468 - 0.447) / (0.435 - 0.26)
+    elif Ma <= 0.568:
+        return 0.468 + (Ma - 0.435) * (0.497 - 0.468) / (0.568 - 0.435)
+    elif Ma <= 0.714:
+        return 0.497 + (Ma - 0.568) * (0.535 - 0.497) / (0.714 - 0.568)
+    elif Ma <= 0.81:
+        return 0.535 + (Ma - 0.714) * (0.58 - 0.535) / (0.81 - 0.714)
+    elif Ma <= 0.857:
+        return 0.58 + (Ma - 0.81) * (0.612 - 0.58) / (0.857 - 0.81)
+    elif Ma <= 0.9:
+        return 0.612 + (Ma - 0.857) * (0.657 - 0.612) / (0.9 - 0.857)
+    elif Ma <= 0.969:
+        return 0.657 + (Ma - 0.9) * (0.65 - 0.657) / (0.969 - 0.9)
     else:
         return 0.65
 
@@ -305,6 +317,7 @@ airbrakes_model_2024_03_20 = rocket_classes.Airbrakes(
     # TODO: verify Cd by checking other teams' values again
     max_deployment_speed = 5.5,  # deg/s
     # TODO: check with Cam on how to make more accurate (likely not to be exactly linear?)
+    # TODO: consider retraction speed being significantly faster than deployment speed, incorporate being closed for apogee into sims
     max_deployment_angle = 45  # deg
 )
 

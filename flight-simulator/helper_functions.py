@@ -43,19 +43,19 @@ def air_density_fn(pressure, temp):
     - float: Air density in kilograms per cubic meter.
     """
     return pressure / (con.R_specific_air * temp)
-def air_density_optimized(temp, const1, const2):
+def air_density_optimized(temp, multiplier):
     """
     Calculate the density of air at a given height above the launchpad.
 
     Args:
     - temp (float): Temperature at the given height in Kelvin.
-    - const1 (float): A constant derived from the temperature and pressure at the launchpad, the lapse rate, the specific gas constant for air, and the value for gravity near the Earth's surface. Calculated at the start of the simulation script outside of the main loops. Equal to P_launchpad / (R_air * pow(T_launchpad, Fg_over_R_spec_air_T_lapse_rate)).
-    - const2 (float): A constant derived from the value for gravity near the Earth's surface, the specific gas constant for air, and the lapse rate. Calculated at the start of the simulation script outside of the main loops. Equal to Fg_over_R_spec_air_T_lapse_rate - 1.
+    - multiplier (float): A constant derived from the temperature and pressure at the launchpad, the lapse rate, the specific gas constant for air, and the value for gravity near the Earth's surface. Calculated at the start of the simulation script outside of the main loops. Equal to P_launchpad / (R_air * pow(T_launchpad, Fg_over_R_spec_air_T_lapse_rate)).
 
     Returns:
     - float: Air density at the given height in kilograms per cubic meter.
     """
-    return const1 * pow(temp, const2)
+    return multiplier * pow(temp, con.F_g_over_R_spec_air_T_lapse_rate_minus_one)
+# TODO: check if exponential approximation gives a negligible error (https://en.wikipedia.org/wiki/Density_of_air), if so, maybe could use it at leat in the controller sim
 
 def calculate_dynamic_pressure(air_density, speed):
     """

@@ -48,10 +48,9 @@ def simulate_flight(rocket=Prometheus, launch_conditions=Prometheus_launch_condi
 
     # Calculate constants to be used in air density function
     multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, con.F_g_over_R_spec_air_T_lapse_rate))
-    exponent_constant = con.F_g_over_R_spec_air_T_lapse_rate - 1
 
     # Initialize air density
-    air_density = hfunc.air_density_optimized(launchpad_temp, multiplier, exponent_constant)
+    air_density = hfunc.air_density_optimized(launchpad_temp, multiplier)
 
     # Store the initial state of the rocket
     simulated_values = [
@@ -109,7 +108,7 @@ def simulate_flight(rocket=Prometheus, launch_conditions=Prometheus_launch_condi
     while height < effective_h_launch_rail:
         # Update environmental conditions based on height
         temperature = hfunc.temp_at_height(height, launchpad_temp)
-        air_density = hfunc.air_density_optimized(temperature, multiplier, exponent_constant)
+        air_density = hfunc.air_density_optimized(temperature, multiplier)
 
         # Calculate Mach number, drag coefficient, and forces
         Ma = hfunc.mach_number_fn(speed, temperature)
@@ -153,7 +152,7 @@ def simulate_flight(rocket=Prometheus, launch_conditions=Prometheus_launch_condi
     while time < burnout_time:
         # Update environmental conditions based on height
         temperature = hfunc.temp_at_height(height, launchpad_temp)
-        air_density = hfunc.air_density_optimized(temperature, multiplier, exponent_constant)
+        air_density = hfunc.air_density_optimized(temperature, multiplier)
 
         # Calculate Mach number, Drag coefficient, and Forces
         Ma = hfunc.mach_number_fn(speed, temperature)
@@ -202,7 +201,7 @@ def simulate_flight(rocket=Prometheus, launch_conditions=Prometheus_launch_condi
 
     while v_y > 0:
         temperature = hfunc.temp_at_height(height, launchpad_temp)
-        air_density = hfunc.air_density_optimized(temperature, multiplier, exponent_constant)
+        air_density = hfunc.air_density_optimized(temperature, multiplier)
 
         # Calculate Mach number, Drag coefficient, and Forces
         Ma = hfunc.mach_number_fn(speed, temperature)
@@ -286,7 +285,6 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket=Prometheus, airbrakes=cur
 
     # Calculate constants to be used in air density function
     multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, con.F_g_over_R_spec_air_T_lapse_rate))
-    exponent_constant = con.F_g_over_R_spec_air_T_lapse_rate - 1
 
     # Extract airbrakes parameters
     Cd_brakes = airbrakes.Cd_brakes
@@ -315,7 +313,7 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket=Prometheus, airbrakes=cur
         time += timestep
 
         temperature = hfunc.temp_at_height(height, launchpad_temp)
-        air_density = hfunc.air_density_optimized(temperature, multiplier, exponent_constant)
+        air_density = hfunc.air_density_optimized(temperature, multiplier)
         Ma = hfunc.mach_number_fn(speed, temperature)
         Cd_A_rocket = Cd_A_rocket_fn(Ma)
         q = hfunc.calculate_dynamic_pressure(air_density, speed)

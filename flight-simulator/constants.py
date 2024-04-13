@@ -97,6 +97,7 @@ As per https://www.grc.nasa.gov/WWW/BGH/realspec.html, air is calorically perfec
 # derived constants
 R_specific_air = R_universal / MM_air  # J/(kg*K)
 F_g_over_R_spec_air_T_lapse_rate = F_gravity / (R_specific_air * T_lapse_rate) # unitless
+F_g_over_R_spec_air_T_lapse_rate_minus_one = F_g_over_R_spec_air_T_lapse_rate - 1  # unitless
 adiabatic_index_air_times_R_specific_air = adiabatic_index_air * R_specific_air  # J/(kg*K)
 
 # conversion factors

@@ -27,12 +27,11 @@ input_v_y = pre_brake_flight["v_y"].iloc[-1]
 input_v_x = pre_brake_flight["v_x"].iloc[-1]
 
 # can be computed once at launchpad, then same value used each time a new sim is run
-    # maybe incorporate this into the series of things the controller does during the burn based on what it read right before the burn (most recent launchpad pressure reading)
+    # maybe in the series of things the controller does during burn based on what it read right before the burn (most recent launchpad pressure reading)
     # launchpad temperature could be something fed into it at the start of the day based on forecast temps at different times, and then it picks the one that is closest to the current time, as temp inside the rocket could vary from the outside
 launchpad_temp = pre_brake_flight["temperature"].iloc[0]
 launchpad_pressure = pre_brake_flight["air_density"].iloc[0] * con.R_specific_air * launchpad_temp
 multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, con.F_g_over_R_spec_air_T_lapse_rate))
-exponent_constant = con.F_g_over_R_spec_air_T_lapse_rate - 1
 
 
 # TODO: opportunities to improve efficiency:
@@ -43,7 +42,7 @@ exponent_constant = con.F_g_over_R_spec_air_T_lapse_rate - 1
 - all constants will be hardcoded
 """
 
-def simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, launchpad_temp, multiplier, exponent_constant, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle = 0, timestep=0.01):
+def simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, launchpad_temp, multiplier, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle = 0, timestep=0.01):
     """
     Simulates the flight of the rocket with the airbrakes deployed at a constant angle to apogee, and returns the apogee height. To be used by the controller to predict apogee based on current deployment angle and adjust the airbrakes deployment angle accordingly.
 
@@ -56,7 +55,6 @@ def simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, l
     input_v_x (float): The horizontal velocity of the rocket at the start of the simulation
     launchpad_temp (float): The temperature at the launchpad
     multiplier (float): The multiplier used in the air density calculation
-    exponent_constant (float): The exponent constant used in the air density calculation
     rocket (Rocket): The rocket object
     airbrakes (Airbrakes): The airbrakes object
     deployment_angle (float): The angle at which the airbrakes are deployed
@@ -103,7 +101,7 @@ def simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, l
 
     while v_y > 0:
         temperature = hfunc.temp_at_height(height, launchpad_temp)
-        air_density = hfunc.air_density_optimized(temperature, multiplier, exponent_constant)
+        air_density = hfunc.air_density_optimized(temperature, multiplier)
         Ma = hfunc.mach_number_fn(speed, temperature)
         Cd_A_rocket = Cd_A_rocket_fn(Ma)
         q = hfunc.calculate_dynamic_pressure(air_density, speed)        
@@ -120,21 +118,21 @@ def simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, l
 
     return height
 
-# TODO: going to need to put some work into picking a good timestep. maybe make it dynamic? for now using 0.1, which is small enough to cause less than a 1% error in the apogee prediction compared to a sim with a timestep of 0.001. Eventually do a proper analysis. Should also vary depending on how much of the flight is left
+# TODO: put some work into picking a good timestep. maybe make it dynamic? for now using 0.1, which is small enough to cause less than a 1% error in the apogee prediction compared to a sim with a timestep of 0.001. Eventually do a proper analysis. Should also vary depending on how much of the flight is left
 
 
 if __name__ == "__main__":
 
     pass 
 
-    # apogee = simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, launchpad_temp, multiplier, exponent_constant, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=np.deg2rad(30), timestep=0.1)
+    # apogee = simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, launchpad_temp, multiplier, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=np.deg2rad(30), timestep=0.1)
     # print(apogee*3.28084)
 
 
     # import time
     # time1 = time.time()
     # for i in range(10000):
-    #     simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, launchpad_temp, multiplier, exponent_constant, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=np.deg2rad(30), timestep=0.1)
+    #     simulate_airbrakes_flight(input_height, input_speed, input_v_y, input_v_x, launchpad_temp, multiplier, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=np.deg2rad(30), timestep=0.1)
     #     if i % 100 == 0:
     #         print(i)
     # time2 = time.time()
