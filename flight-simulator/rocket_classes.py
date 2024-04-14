@@ -41,9 +41,13 @@ class Rocket:
         self.h_second_rail_button = h_second_rail_button
 
         self.dry_mass = rocket_mass + motor.dry_mass
-        # TODO: make this half_Cd_A_rocket, take 0.5 out of dynamic pressure calc, so there's one less float multiplication
-        def Cd_A_rocket_fn(Ma):
-            return Cd_rocket_at_Ma(Ma) * A_rocket
+        
+        if callable(Cd_rocket_at_Ma):
+            # TODO: make this half_Cd_A_rocket, take 0.5 out of dynamic pressure calc, so there's one less float multiplication
+            def Cd_A_rocket_fn(Ma):
+                return Cd_rocket_at_Ma(Ma) * A_rocket
+        else:
+            def Cd_A_rocket_fn(Ma): return Cd_rocket_at_Ma * A_rocket
         self.Cd_A_rocket = Cd_A_rocket_fn
 
 
