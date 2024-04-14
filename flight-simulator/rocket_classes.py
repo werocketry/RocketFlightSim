@@ -83,3 +83,15 @@ class Airbrakes:
         self.Cd_brakes = Cd_brakes
         self.max_deployment_speed = max_deployment_speed
         self.max_deployment_angle = max_deployment_angle
+
+class past_flight ():
+    """
+    Stores the rocket, launch conditions, and apogee of a past flight
+    likely add more things like max speed, max acceleration later
+    """
+    
+    def __init__(self, rocket, launch_conditions, apogee, name = None):
+        self.rocket = rocket
+        self.launch_conditions = launch_conditions
+        self.apogee = apogee
+        self.name = name

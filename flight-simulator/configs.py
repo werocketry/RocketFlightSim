@@ -286,6 +286,7 @@ Prometheus = rocket_classes.Rocket(
     # L_rocket = 2.229,  # length of Prometheus in m # measure to double check
     A_rocket = 0.015326, #+ 0.13 * 0.008 * 3,  # 5.5" diameter circle's area in m^2, plus 3 fins with span of 13cm and thickness of 0.8cm
         # I think it was only the area of the body tube that was fed to Star-CCM+ for the Cd calculation
+            # but maybe not?? TODO: look into more
     rocket_mass = 13.93,  # kg, from (TODO: CAD? final physical rocket mass? were they the same at the end?)
     motor = Cesaroni_7579M1520_P,
     Cd_rocket_at_Ma = Prometheus_Cd_at_Ma,
