@@ -68,7 +68,7 @@ NDRT_2020 = rocket_classes.past_flight(
 https://github.com/RocketPy-Team/RocketPy/blob/master/docs/examples/valetudo_flight_sim.ipynb
 """
 keron = rocket_classes.Motor(
-    dry_mass=0.001,
+    dry_mass=0.001, # total dry mass of the rocket includes motor dry mass in the RocketPy ipynb (they put 0.001 for the motor dry mass)
     thrust_curve={
         # Thrust: https://github.com/RocketPy-Team/RocketPy/blob/master/data/motors/keron/thrustCurve.csv
         0:3.8,
@@ -311,16 +311,37 @@ keron = rocket_classes.Motor(
         5.252:5.68,
         5.274:5.89
     },
-    fuel_mass_curve={ # TBU: make the fuel burn speed proportional to the thrust
-        0:1.409,
-        5.274:0.0
-    }
+    fuel_mass_curve={0: 1.409}
+    # fuel mass curve couldn't be found, so will make one
+    # initial mass is 1.409 kg (from GitHub), final mass is 0 kg
+    # total impulse is 1415.154 Ns (from GitHub)
+        # verified to be the same value as taking the integral of the thrust curve
+    # make the fuel burn speed proportional to the thrust
 )
+total_impulse = 1415.154
+for i in range(1, len(keron.thrust_curve)):
+    keron.fuel_mass_curve[list(keron.thrust_curve.keys())[i]] = keron.fuel_mass_curve[list(keron.thrust_curve.keys())[i-1]] - (keron.thrust_curve[list(keron.thrust_curve.keys())[i]] + keron.thrust_curve[list(keron.thrust_curve.keys())[i-1]])/2 * (list(keron.thrust_curve.keys())[i] - list(keron.thrust_curve.keys())[i-1]) / total_impulse * 1.409
+""" # Visualization of the fuel mass curve compared to the thrust curve
+# plot the fuel burn speed and the thrust on the same graph (different scales)
+import matplotlib.pyplot as plt
+fig, ax1 = plt.subplots()
+ax1.plot(list(keron.thrust_curve.keys()), [keron.thrust_curve[i] for i in keron.thrust_curve], 'b-')
+ax1.set_xlabel('time (s)')
+ax1.set_ylabel('Thrust (N)', color='b')
+ax1.tick_params('y', colors='b')
+ax2 = ax1.twinx()
+ax2.plot(list(keron.fuel_mass_curve.keys()), [keron.fuel_mass_curve[i] for i in keron.fuel_mass_curve], 'r-')
+ax2.set_ylabel('Fuel mass (kg)', color='r')
+ax2.tick_params('y', colors='r')
+plt.show()
+"""
 Valetudo_rocket = rocket_classes.Rocket(
     rocket_mass=8.257,
     motor=keron,
     A_rocket=np.pi*0.04045**2,
-    Cd_rocket_at_Ma=0.44 # TBU, they have a curve at https://github.com/RocketPy-Team/RocketPy/tree/master/data/valetudo
+    Cd_rocket_at_Ma = 0.9081/1.05 # TBC:
+        # they define a drag coefficient of (0.9081/1.05) in the notebook, but they have a few different curves here: https://github.com/RocketPy-Team/RocketPy/tree/master/tests/fixtures/acceptance/PJ_Valetudo
+        # none of them were made with CFD, so they're all probably far enough off that it's not worth the effort to spend time on it
 )
 Valetudo_launch_conditions = rocket_classes.LaunchConditions(
     # as per parameters in the GitHub
@@ -339,9 +360,7 @@ Valetudo = rocket_classes.past_flight(
 """ Juno III - Projeto Jupiter 2023
 https://github.com/RocketPy-Team/RocketPy/blob/master/docs/examples/juno3_flight_sim.ipynb
 """
-mandioca = rocket_classes.Motor(
-    dry_mass=0.00000000001,
-    thrust_curve={
+mandioca_thrust_curve={ # per https://github.com/RocketPy-Team/RocketPy/tree/master/data/motors/mandioca
         0:8.833374233,
         0.021:11.49337423,
         0.044:15.42337423,
@@ -604,21 +623,192 @@ mandioca = rocket_classes.Motor(
         5.74:-32.04662577,
         5.762:-40.03662577,
         5.784:-47.32662577,
-        },
-    fuel_mass_curve={ # TBU: make the fuel burn speed proportional to the thrust
-        0:8.169,
-        5.784:0.0
-    }
+        }
+# reshaped as they do in the notebook to have a total impulse of 8800 Ns and a burn time of 5.8 s
+def reshape_thrust_curve(thrust_curve, total_impulse, burn_time):
+    time_array = np.array(list(thrust_curve.keys()))
+    thrust_array = np.array(list(thrust_curve.values()))
+    new_time_array = burn_time/time_array[-1] * time_array
+    old_total_impulse = np.trapz(thrust_array, time_array)
+    new_thrust_array = thrust_array * total_impulse / old_total_impulse
+    return {new_time_array[i]: new_thrust_array[i] for i in range(len(new_time_array))}
+total_impulse, burn_time = 8800, 5.8
+reshaped_mandioca_thrust_curve = reshape_thrust_curve(mandioca_thrust_curve, total_impulse, burn_time)
+mandioca = rocket_classes.Motor(
+    dry_mass=0.00000000001, # total dry mass of the rocket includes motor dry mass in the RocketPy ipynb (they put 0.00000000001 for the motor dry mass)
+    thrust_curve=reshaped_mandioca_thrust_curve,
+    fuel_mass_curve={0:8.169}
+    # fuel mass curve couldn't be found, so will make one
+    # initial mass is 8.169 kg (from GitHub), final mass is 0 kg
+    # make the fuel burn speed proportional to the thrust
 )
+for i in range(1, len(mandioca.thrust_curve)):
+    mandioca.fuel_mass_curve[list(mandioca.thrust_curve.keys())[i]] = mandioca.fuel_mass_curve[list(mandioca.thrust_curve.keys())[i-1]] - (mandioca.thrust_curve[list(mandioca.thrust_curve.keys())[i]] + mandioca.thrust_curve[list(mandioca.thrust_curve.keys())[i-1]])/2 * (list(mandioca.thrust_curve.keys())[i] - list(mandioca.thrust_curve.keys())[i-1]) / total_impulse * 8.169
+""" # Visualization of the fuel mass curve compared to the thrust curve
+# plot the fuel burn speed and the thrust on the same graph (different scales)
+import matplotlib.pyplot as plt
+fig, ax1 = plt.subplots()
+ax1.plot(list(mandioca.thrust_curve.keys()), [mandioca.thrust_curve[i] for i in mandioca.thrust_curve], 'b-')
+ax1.set_xlabel('time (s)')
+ax1.set_ylabel('Thrust (N)', color='b')
+ax1.tick_params('y', colors='b')
+ax2 = ax1.twinx()
+ax2.plot(list(mandioca.fuel_mass_curve.keys()), [mandioca.fuel_mass_curve[i] for i in mandioca.fuel_mass_curve], 'r-')
+ax2.set_ylabel('Fuel mass (kg)', color='r')
+ax2.tick_params('y', colors='r')
+plt.show()
+"""
+def Juno3_Cd_rocket_at_Ma(Ma):
+    # per their curve at https://github.com/RocketPy-Team/RocketPy/tree/master/data/juno3
+    # but adjusted per the following line in their notebook:
+        # factor = 0.38 / juno.power_off_drag(0.6)  # From CFD analysis
+    # the curve at 0.6 is 0.368, so the factor is 0.38/0.368 = 1.032609
+    if Ma < 0.01: return 0.486 * 1.032609
+    elif Ma < 0.02: return 0.478  * 1.032609
+    elif Ma < 0.03: return 0.459 * 1.032609
+    elif Ma < 0.04: return 0.443 * 1.032609
+    elif Ma < 0.05: return 0.429 * 1.032609
+    elif Ma < 0.06: return 0.418 * 1.032609
+    elif Ma < 0.07: return 0.409 * 1.032609
+    elif Ma < 0.08: return 0.401 * 1.032609
+    elif Ma < 0.09: return 0.393 * 1.032609
+    elif Ma < 0.10: return 0.387 * 1.032609
+    elif Ma < 0.11: return 0.381 * 1.032609
+    elif Ma < 0.12: return 0.376 * 1.032609
+    elif Ma < 0.13: return 0.372 * 1.032609
+    elif Ma < 0.14: return 0.366 * 1.032609
+    elif Ma < 0.15: return 0.369 * 1.032609
+    elif Ma < 0.16: return 0.37 * 1.032609
+    elif Ma < 0.17: return 0.372 * 1.032609
+    elif Ma < 0.18: return 0.373 * 1.032609
+    elif Ma < 0.19: return 0.374 * 1.032609
+    elif Ma < 0.20: return 0.374 * 1.032609
+    elif Ma < 0.21: return 0.375 * 1.032609
+    elif Ma < 0.22: return 0.375 * 1.032609
+    elif Ma < 0.23: return 0.375 * 1.032609
+    elif Ma < 0.24: return 0.375 * 1.032609
+    elif Ma < 0.25: return 0.375 * 1.032609
+    elif Ma < 0.26: return 0.375 * 1.032609
+    elif Ma < 0.27: return 0.375 * 1.032609
+    elif Ma < 0.28: return 0.375 * 1.032609
+    elif Ma < 0.29: return 0.375 * 1.032609
+    elif Ma < 0.30: return 0.375 * 1.032609
+    elif Ma < 0.31: return 0.375 * 1.032609
+    elif Ma < 0.32: return 0.375 * 1.032609
+    elif Ma < 0.33: return 0.375 * 1.032609
+    elif Ma < 0.34: return 0.374 * 1.032609
+    elif Ma < 0.35: return 0.374 * 1.032609
+    elif Ma < 0.36: return 0.374 * 1.032609
+    elif Ma < 0.37: return 0.374 * 1.032609
+    elif Ma < 0.38: return 0.373 * 1.032609
+    elif Ma < 0.39: return 0.373 * 1.032609
+    elif Ma < 0.40: return 0.373 * 1.032609
+    elif Ma < 0.41: return 0.373 * 1.032609
+    elif Ma < 0.42: return 0.372 * 1.032609
+    elif Ma < 0.43: return 0.372 * 1.032609
+    elif Ma < 0.44: return 0.372 * 1.032609
+    elif Ma < 0.45: return 0.371 * 1.032609
+    elif Ma < 0.46: return 0.371 * 1.032609
+    elif Ma < 0.47: return 0.371 * 1.032609
+    elif Ma < 0.48: return 0.371 * 1.032609
+    elif Ma < 0.49: return 0.37 * 1.032609
+    elif Ma < 0.50: return 0.37 * 1.032609
+    elif Ma < 0.51: return 0.37 * 1.032609
+    elif Ma < 0.52: return 0.37 * 1.032609
+    elif Ma < 0.53: return 0.369 * 1.032609
+    elif Ma < 0.54: return 0.369 * 1.032609
+    elif Ma < 0.55: return 0.369 * 1.032609
+    elif Ma < 0.56: return 0.369 * 1.032609
+    elif Ma < 0.57: return 0.368 * 1.032609
+    elif Ma < 0.58: return 0.368 * 1.032609
+    elif Ma < 0.59: return 0.368 * 1.032609
+    elif Ma < 0.60: return 0.368 * 1.032609
+    elif Ma < 0.61: return 0.368 * 1.032609
+    elif Ma < 0.62: return 0.368 * 1.032609
+    elif Ma < 0.63: return 0.368 * 1.032609
+    elif Ma < 0.64: return 0.368 * 1.032609
+    elif Ma < 0.65: return 0.368 * 1.032609
+    elif Ma < 0.66: return 0.368 * 1.032609
+    elif Ma < 0.67: return 0.369 * 1.032609
+    elif Ma < 0.68: return 0.369 * 1.032609
+    elif Ma < 0.69: return 0.369 * 1.032609
+    elif Ma < 0.70: return 0.369 * 1.032609
+    elif Ma < 0.71: return 0.369 * 1.032609
+    elif Ma < 0.72: return 0.369 * 1.032609
+    elif Ma < 0.73: return 0.369 * 1.032609
+    elif Ma < 0.74: return 0.37 * 1.032609
+    elif Ma < 0.75: return 0.37 * 1.032609
+    elif Ma < 0.76: return 0.37 * 1.032609
+    elif Ma < 0.77: return 0.37 * 1.032609
+    elif Ma < 0.78: return 0.37 * 1.032609
+    elif Ma < 0.79: return 0.37 * 1.032609
+    elif Ma < 0.80: return 0.371 * 1.032609
+    elif Ma < 0.81: return 0.371 * 1.032609
+    elif Ma < 0.82: return 0.371 * 1.032609
+    elif Ma < 0.83: return 0.371 * 1.032609
+    elif Ma < 0.84: return 0.371 * 1.032609
+    elif Ma < 0.85: return 0.372 * 1.032609
+    elif Ma < 0.86: return 0.372 * 1.032609
+    elif Ma < 0.87: return 0.372 * 1.032609
+    elif Ma < 0.88: return 0.372 * 1.032609
+    elif Ma < 0.89: return 0.372 * 1.032609
+    elif Ma < 0.90: return 0.373 * 1.032609
+    elif Ma < 0.91: return 0.375 * 1.032609
+    elif Ma < 0.92: return 0.383 * 1.032609
+    elif Ma < 0.93: return 0.424 * 1.032609
+    elif Ma < 0.94: return 0.496 * 1.032609
+    elif Ma < 0.95: return 0.568 * 1.032609
+    elif Ma < 0.96: return 0.64 * 1.032609
+    elif Ma < 0.97: return 0.712 * 1.032609
+    elif Ma < 0.98: return 0.784 * 1.032609
+    elif Ma < 0.99: return 0.856 * 1.032609
+    elif Ma < 1.00: return 0.928 * 1.032609
+    elif Ma < 1.01: return 0.001 * 1.032609
+    elif Ma < 1.02: return 0.001072 * 1.032609
+    elif Ma < 1.03: return 0.001144 * 1.032609
+    elif Ma < 1.04: return 0.001216 * 1.032609
+    elif Ma < 1.05: return 0.001288 * 1.032609
+    elif Ma < 1.06: return 0.001358 * 1.032609
+    elif Ma < 1.07: return 0.001431 * 1.032609
+    elif Ma < 1.08: return 0.001508 * 1.032609
+    elif Ma < 1.09: return 0.001589 * 1.032609
+    elif Ma < 1.10: return 0.001673 * 1.032609
+    elif Ma < 1.11: return 0.001761 * 1.032609
+    elif Ma < 1.12: return 0.001852 * 1.032609
+    elif Ma < 1.13: return 0.001946 * 1.032609
+    elif Ma < 1.14: return 0.002045 * 1.032609
+    elif Ma < 1.15: return 0.002146 * 1.032609
+    elif Ma < 1.16: return 0.002251 * 1.032609
+    elif Ma < 1.17: return 0.002358 * 1.032609
+    elif Ma < 1.18: return 0.002381 * 1.032609
+    elif Ma < 1.19: return 0.002343 * 1.032609
+    elif Ma < 1.20: return 0.002309 * 1.032609
+    elif Ma < 1.21: return 0.002277 * 1.032609
+    elif Ma < 1.22: return 0.002247 * 1.032609
+    elif Ma < 1.23: return 0.00222 * 1.032609
+    elif Ma < 1.24: return 0.002194 * 1.032609
+    else: return 0.00217 * 1.032609
+# this curve seems a bit strange, but the weird part happens after the Mach numbers the rocket will reach. Still could indicate that the curve is not that accurate
+""" # plot the drag coefficient curve
+import numpy as np
+import matplotlib.pyplot as plt
+Ma = np.linspace(0, 1.25, 100)
+Cd = [Juno3_Cd_rocket_at_Ma(m) for m in Ma]
+plt.plot(Ma, Cd)
+plt.xlabel("Mach number")
+plt.ylabel("Cd")
+plt.show()
+"""
 Juno3_rocket = rocket_classes.Rocket(
     rocket_mass=24.05,
     motor=mandioca,
     A_rocket=np.pi*0.0655**2,
-    Cd_rocket_at_Ma=0.44 # TBU, they have a curve at https://github.com/RocketPy-Team/RocketPy/tree/master/data/juno3
+    Cd_rocket_at_Ma=Juno3_Cd_rocket_at_Ma
 )
 Juno3_launch_conditions = rocket_classes.LaunchConditions(
-    # as per parameters in the GitHub
+    # note that launchpad pressure in the GitHub notebook is 84992 Pa, but the SRAD flight computer read 86260.99854 on the ground, and the COTS flight computer read 86170 Pa. Going to stick with 84992, precision of the value makes me think it was measured with some other instrument
     launchpad_pressure=84992,
+    # as per parameters in the GitHub:
     launchpad_temp=306.95-273.15,
     L_launch_rail=5.2,
     launch_angle=85
@@ -634,7 +824,7 @@ Juno3 = rocket_classes.past_flight(
 https://github.com/RocketPy-Team/RocketPy/blob/master/docs/examples/bella_lui_flight_sim.ipynb
 """
 K828FJ = rocket_classes.Motor(
-    dry_mass=0.001, # seems the total dry mass of the rocket includes motor dry mass in the RocketPy ipynb (they put 0.001 for the motor dry mass)
+    dry_mass=0.001, # total dry mass of the rocket includes motor dry mass in the RocketPy ipynb (they put 0.001 for the motor dry mass)
     thrust_curve={ # https://www.thrustcurve.org/simfiles/5f4294d20002e90000000442/
         0:0,
         0.01:1112.06,
@@ -714,7 +904,22 @@ Bella_Lui = rocket_classes.past_flight(
     apogee=458.97,
     name="Bella Lui 2020"
 )
+"""
+This is the flight that the sim is furthest off from predicting well. Possible reasons:
+- weak motor, short and quick flight leads to:
+    - various small effects not accounted for in the sim made more significant
+    - can't put the energy into wording it right now, but intuition
+- not confident in the values the notebook provides for the motor:
+    - adding on the motor mass from thrustcurve.org, the sim gives an error of -14.76, instead of +24.63
+        - also lended some credence due to the sim also underestimating the other 3 flights
+    - was it even the K828FJ that was used?
+        - the RocketPy paper says that total impulse of the "class K solid motor" used for the flight was 2120 Ns, but the notebook says 2070.99 Ns
+            - https://www.researchgate.net/publication/354034513_RocketPy_Six_Degree-of-Freedom_Rocket_Trajectory_Simulator
+- using a constant Cd may not be a great approximation for a rocket hitting about Mach 0.25 
+    - also, no mention of where the Cd value comes from. If it's ork or RasAero, it's likely not accurate. If it was CFD, they likely would have given a curve
 
+Could diagnose more by comparing plots of data from the flight computer to plots from the sim, but a bit busy atm
+"""
 
 past_flights = [NDRT_2020, Valetudo, Juno3, Bella_Lui]
 
