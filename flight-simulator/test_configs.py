@@ -57,7 +57,7 @@ NDRT_2020_launch_conditions = rocket_classes.LaunchConditions(
     L_launch_rail = 3.353,
     launch_angle = 90
 )
-NDRT_2020 = rocket_classes.past_flight(
+NDRT_2020_flight = rocket_classes.past_flight(
     rocket = NDRT_2020_rocket,
     launch_conditions = NDRT_2020_launch_conditions,
     apogee = 1317,
@@ -350,7 +350,7 @@ Valetudo_launch_conditions = rocket_classes.LaunchConditions(
     L_launch_rail=5.7,
     launch_angle=84.7
 )
-Valetudo = rocket_classes.past_flight(
+Valetudo_flight = rocket_classes.past_flight(
     rocket=Valetudo_rocket,
     launch_conditions=Valetudo_launch_conditions,
     apogee=860,
@@ -813,7 +813,7 @@ Juno3_launch_conditions = rocket_classes.LaunchConditions(
     L_launch_rail=5.2,
     launch_angle=85
 )
-Juno3 = rocket_classes.past_flight(
+Juno3_flight = rocket_classes.past_flight(
     rocket=Juno3_rocket,
     launch_conditions=Juno3_launch_conditions,
     apogee=3213,
@@ -898,7 +898,7 @@ Bella_Lui_launch_conditions = rocket_classes.LaunchConditions(
     L_launch_rail=4.2,
     launch_angle=89
 )
-Bella_Lui = rocket_classes.past_flight(
+Bella_Lui_flight = rocket_classes.past_flight(
     rocket=Bella_Lui_rocket,
     launch_conditions=Bella_Lui_launch_conditions,
     apogee=458.97,
@@ -921,7 +921,7 @@ This is the flight that the sim is furthest off from predicting well. Possible r
 Could diagnose more by comparing plots of data from the flight computer to plots from the sim, but a bit busy atm
 """
 
-past_flights = [NDRT_2020, Valetudo, Juno3, Bella_Lui]
+past_flights = [NDRT_2020_flight, Valetudo_flight, Juno3_flight, Bella_Lui_flight]
 
 
 if __name__ == "__main__":

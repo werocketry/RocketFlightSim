@@ -116,4 +116,4 @@ for i in range(len(deployment_angles)):
 
 burnout_states_df = pd.DataFrame(burnout_states)
 burnout_states_df.drop(columns=["a_y", "a_x", "temperature","air_density","q"], inplace=True)
-burnout_states_df.to_csv("flight-simulator/burnout_states.csv", index=False)
+burnout_states_df.to_csv("flight-simulator/lookup-tables/burnout_states.csv", index=False)
