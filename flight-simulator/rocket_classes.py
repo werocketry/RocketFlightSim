@@ -3,14 +3,14 @@ class Motor:
     """
     dry_mass: mass of the motor without fuel (kg)
     thrust_curve: dictionary of thrust (N) at time (s after ignition)
-    mass_curve: dictionary of mass (kg) at time (s after ignition) # TODO: rename to fuel_mass_curve
+    fuel_mass_curve: dictionary of mass (kg) at time (s after ignition)
     burn_time: time it takes for the motor to burn all of its fuel (s)
     """
 
     def __init__(self, dry_mass, thrust_curve, fuel_mass_curve):
         self.dry_mass = dry_mass
         self.thrust_curve = thrust_curve
-        self.mass_curve = fuel_mass_curve
+        self.fuel_mass_curve = fuel_mass_curve
         self.burn_time = max(thrust_curve.keys())
 
 
@@ -41,9 +41,13 @@ class Rocket:
         self.h_second_rail_button = h_second_rail_button
 
         self.dry_mass = rocket_mass + motor.dry_mass
-        # TODO: make this half_Cd_A_rocket, take 0.5 out of dynamic pressure calc, so there's one less float multiplication
-        def Cd_A_rocket_fn(Ma):
-            return Cd_rocket_at_Ma(Ma) * A_rocket
+        
+        if callable(Cd_rocket_at_Ma):
+            # TODO: make this half_Cd_A_rocket, take 0.5 out of dynamic pressure calc, so there's one less float multiplication
+            def Cd_A_rocket_fn(Ma):
+                return Cd_rocket_at_Ma(Ma) * A_rocket
+        else:
+            def Cd_A_rocket_fn(Ma): return Cd_rocket_at_Ma * A_rocket
         self.Cd_A_rocket = Cd_A_rocket_fn
 
 
@@ -79,3 +83,15 @@ class Airbrakes:
         self.Cd_brakes = Cd_brakes
         self.max_deployment_speed = max_deployment_speed
         self.max_deployment_angle = max_deployment_angle
+
+class past_flight ():
+    """
+    Stores the rocket, launch conditions, and apogee of a past flight
+    likely add more things like max speed, max acceleration later
+    """
+    
+    def __init__(self, rocket, launch_conditions, apogee, name = None):
+        self.rocket = rocket
+        self.launch_conditions = launch_conditions
+        self.apogee = apogee
+        self.name = name

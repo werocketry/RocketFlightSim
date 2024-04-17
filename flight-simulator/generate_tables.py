@@ -73,19 +73,18 @@ plt.show()
 
 # calculate the angles needed to hit 10k
 multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, con.F_g_over_R_spec_air_T_lapse_rate))
-exponent_constant = con.F_g_over_R_spec_air_T_lapse_rate - 1
 
 deployment_angles = []
 tracker = 0
 
 for burnout_state in burnout_states:
-    apogee_no_braking = cfsim.simulate_airbrakes_flight(burnout_state["height"], burnout_state["speed"], burnout_state["v_y"], burnout_state["v_x"], launchpad_temp, multiplier, exponent_constant, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=0, timestep=0.01)
+    apogee_no_braking = cfsim.simulate_airbrakes_flight(burnout_state["height"], burnout_state["speed"], burnout_state["v_y"], burnout_state["v_x"], launchpad_temp, multiplier, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=0, timestep=0.01)
     if apogee_no_braking * 3.28084 < 10000:
         deployment_angles.append(0)
         tracker += 1
         print(f'{tracker} of {len(burnout_states)} deployment angles found')
     else:
-        apogee_max_braking = cfsim.simulate_airbrakes_flight(burnout_state["height"], burnout_state["speed"], burnout_state["v_y"], burnout_state["v_x"], launchpad_temp, multiplier, exponent_constant, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=np.pi / 4, timestep=0.01)
+        apogee_max_braking = cfsim.simulate_airbrakes_flight(burnout_state["height"], burnout_state["speed"], burnout_state["v_y"], burnout_state["v_x"], launchpad_temp, multiplier, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=np.pi / 4, timestep=0.01)
         if apogee_max_braking * 3.28084 > 10000:
             deployment_angles.append(np.pi / 4)
             tracker += 1
@@ -95,7 +94,7 @@ for burnout_state in burnout_states:
             upper_bound = np.pi / 4
             while upper_bound - lower_bound > 0.0001:
                 deployment_angle = (upper_bound + lower_bound) / 2
-                apogee = cfsim.simulate_airbrakes_flight(burnout_state["height"], burnout_state["speed"], burnout_state["v_y"], burnout_state["v_x"], launchpad_temp, multiplier, exponent_constant, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=deployment_angle, timestep=0.01)
+                apogee = cfsim.simulate_airbrakes_flight(burnout_state["height"], burnout_state["speed"], burnout_state["v_y"], burnout_state["v_x"], launchpad_temp, multiplier, rocket=Hyperion, airbrakes=current_airbrakes_model, deployment_angle=deployment_angle, timestep=0.01)
                 if apogee * 3.28084 > 10000:
                     lower_bound = deployment_angle
                 else:
@@ -117,4 +116,4 @@ for i in range(len(deployment_angles)):
 
 burnout_states_df = pd.DataFrame(burnout_states)
 burnout_states_df.drop(columns=["a_y", "a_x", "temperature","air_density","q"], inplace=True)
-burnout_states_df.to_csv("flight-simulator/burnout_states.csv", index=False)
+burnout_states_df.to_csv("flight-simulator/lookup-tables/burnout_states.csv", index=False)
