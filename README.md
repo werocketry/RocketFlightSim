@@ -1,3 +1,3 @@
-# airbrakes-capstone
+# RocketFlightSim
 
-Repo for the WE Rocketry 2023-2024 airbrakes capstone team
+RocketFlightSim (RFS) is a light-weight flight simulator for experimental rockets.
