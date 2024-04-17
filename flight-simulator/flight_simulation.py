@@ -6,7 +6,14 @@ import helper_functions as hfunc
 import rocket_classes as rktClass
 import constants as con
 
-# TODO: add consideration for wind
+""" TODO: Things to consider for future development:
+- wind
+- lift from fins
+    - expected to be minor
+- energy lost to roll
+    - expected to be minor
+"""
+
 
 default_timestep = 0.02
 """ Notes on timesteps:

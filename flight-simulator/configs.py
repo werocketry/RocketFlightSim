@@ -142,6 +142,9 @@ def Prometheus_Cd_at_Ma(mach):
 For demonstrative purposes, here's the Cd functions from the ork files for Prometheus and Hyperion. They are basically indistinguishable.
 
 Using the Prometheus one to project the Prometheus flight gives terrible results, doubling the error to about 2000 ft (at least as the sim and ork outputs stood on March 26th). 
+
+Others are also experiencing underestimation of drag in their OpenRocket simulations: 
+    - https://discord.com/channels/855522432945618965/855533557996453888/1017453223340150805
 """
 def Prometheus_Cd_function_orkPrometheus_V3_CADUPD(Ma):
     """
@@ -209,11 +212,10 @@ def Hyperion_Cd_function_orkV7(Ma):
 # Hyperion Cd function
 
 # TODO: add Hyperion Cd function(s) here when Shelby's done CFD
-# TODO: add a Cd function from some other team's CFD, see how different it actually is to get an idea of how important it is to have a very accurate Cd function
+# TODO: add a Cd function from some other team's CFD, see how different from ours it actually is to get an idea of how important it is to have a very accurate Cd function
 
 
 # Rocket class configurations
-# TODO: add another team's rocket and Cd function, test our sim with it
 Hyperion_2024_04_13 = {
     "A_rocket": 0.015326,# + 0.13 * 0.012 * 3,  # 5.5" diameter circle's area in m^2, plus 3 fins with span of 13cm and thickness of 1.2cm (thickness of Sapphire fins, span as planned)
         # I think it was only the area of the body tube that was fed to Star-CCM+ for the Cd calculation
