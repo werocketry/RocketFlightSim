@@ -6,6 +6,8 @@ from configs import Hyperion, Prometheus_launch_conditions
 
 rocket = Hyperion
 
+# TODO: convert to functions
+
 # max g, given no drag, and no parts of the rocket fall off
 max_thrust = max(rocket.motor.thrust_curve.values())
 print(f"Max thrust (N): {max_thrust}")
