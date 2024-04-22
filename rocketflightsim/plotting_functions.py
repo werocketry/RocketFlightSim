@@ -88,7 +88,7 @@ def plot_aerodynamics(time, height, speed, q, angle_to_vertical, air_density, un
     plt.show()
 
 
-def plot_airbrakes_ascent(ascent, unit="m"):
+def plot_airbrakes_ascent(ascent, airbrakes, unit="m"):
     """
     Plot ascent data including height, speed, acceleration, deployment angle, and force on airbrakes.
 
@@ -96,10 +96,6 @@ def plot_airbrakes_ascent(ascent, unit="m"):
     - ascent (pd.DataFrame): Dataframe containing the ascent data with airbrakes.
     - unit (str): Unit of measurement for height, speed, etc.
     """
-
-    from configs import current_airbrakes_model
-    flap_A = current_airbrakes_model.A_flap
-
 
     # Existing code for height, speed, and acceleration plots
     height = (
@@ -121,7 +117,7 @@ def plot_airbrakes_ascent(ascent, unit="m"):
     # New code to calculate force
     # Assuming 'ascent' DataFrame includes 'q' and 'deployment_angle'
     # and 'airbrake_deployment' is defined or calculated before this function
-    force = (ascent["q"]) * flap_A * np.sin(ascent["deployment_angle"]) * 3
+    force = (ascent["q"]) * airbrakes.A_flap * np.sin(ascent["deployment_angle"]) * 3
 
     fig, ax1 = plt.subplots()
 

@@ -1,7 +1,7 @@
 # Import libraries, define natural constants, helper functions
 import pandas as pd
 import numpy as np
-from configs import Prometheus, Prometheus_launch_conditions, current_airbrakes_model
+from test_configs import Juno3_rocket, Juno3_launch_conditions, default_airbrakes_model
 import helper_functions as hfunc
 import rocket_classes as rktClass
 import constants as con
@@ -23,7 +23,7 @@ The default for OpenRocket sims is 0.01s for the first while, and then somewhere
 A timestep of 0.02s gives apogees a few feet different for a 10k launch compared to using 0.001s. 0.001s can still be used for one-off sims, but when running many sims, 0.02s is better.
 """
 # Flight simulation function
-def simulate_flight(rocket=Prometheus, launch_conditions=Prometheus_launch_conditions, timestep=default_timestep):
+def simulate_flight(rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditions, timestep=default_timestep):
     """
     Simulate the flight of a rocket until its apogee given its specifications and launch conditions.
 
@@ -281,7 +281,7 @@ def simulate_flight(rocket=Prometheus, launch_conditions=Prometheus_launch_condi
 
 
 # Flight with airbrakes simulation function
-def simulate_airbrakes_flight(pre_brake_flight, rocket=Prometheus, airbrakes=current_airbrakes_model, timestep=default_timestep):
+def simulate_airbrakes_flight(pre_brake_flight, rocket=Juno3_rocket, airbrakes=default_airbrakes_model, timestep=default_timestep):
     # Extract rocket parameters
     mass = rocket.dry_mass
     Cd_A_rocket_fn = rocket.Cd_A_rocket
@@ -389,20 +389,20 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket=Prometheus, airbrakes=cur
 
 
 if __name__ == "__main__":
-    from configs import Hyperion
+    from test_configs import Juno3_rocket, Juno3_launch_conditions, default_airbrakes_model
     
-    dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=Hyperion, timestep=0.001)
+    dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=Juno3_rocket, timestep=0.001)
     
     print(dataset[["time", "height", "speed"]].iloc[apogee_index - 1]*3.28084)
-    ascent, time_of_max_deployment = simulate_airbrakes_flight(dataset.iloc[:burnout_index].copy(), rocket=Hyperion, timestep=0.001)
+    ascent, time_of_max_deployment = simulate_airbrakes_flight(dataset.iloc[:burnout_index].copy(), rocket=Juno3_rocket, timestep=0.001)
     print(ascent[["time", "height", "speed"]].iloc[-1]*3.28084)
 
     # run a couple hundred different timesteps in logspace between 0.001 and 0.1 to see how it changes to help pick a good timestep
     
 """    apogees = []
     for timestep in np.logspace(-3, -1, 200):
-        dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=Hyperion, timestep=timestep)
-        ascent, time_of_max_deployment = simulate_airbrakes_flight(dataset.iloc[:burnout_index].copy(), rocket=Hyperion, timestep=0.001)
+        dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=Juno3_rocket, timestep=timestep)
+        ascent, time_of_max_deployment = simulate_airbrakes_flight(dataset.iloc[:burnout_index].copy(), rocket=Juno3_rocket, timestep=0.001)
         apogees.append(ascent["height"].iloc[-1]*3.28084)
         print(len(apogees))
     # plot them

@@ -44,6 +44,7 @@ class Rocket:
         
         if callable(Cd_rocket_at_Ma):
             # TODO: make this half_Cd_A_rocket, take 0.5 out of dynamic pressure calc, so there's one less float multiplication
+                # maybe only do it in the controller's flight simulator, doesn't mean much for the library
             def Cd_A_rocket_fn(Ma):
                 return Cd_rocket_at_Ma(Ma) * A_rocket
         else:

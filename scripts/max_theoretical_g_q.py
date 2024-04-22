@@ -2,38 +2,49 @@ import numpy as np
 import constants as con
 import rocket_classes as rktClass
 import helper_functions as hfunc
-from configs import Hyperion, Prometheus_launch_conditions
 
-rocket = Hyperion
+def max_theoretical_thrust(rocket):
+    """
+    Returns the maximum theoretical g-force on the rocket assuming no drag, the motor performs at or below spec max thrust, and no parts of the rocket fall off.
 
-# TODO: convert to functions
+    Args:
+        rocket (Rocket): A rocket object
 
-# max g, given no drag, and no parts of the rocket fall off
-max_thrust = max(rocket.motor.thrust_curve.values())
-print(f"Max thrust (N): {max_thrust}")
-time_of_max_thrust = max(rocket.motor.thrust_curve, key=rocket.motor.thrust_curve.get)
-mass_at_max_thrust = hfunc.mass_at_time(time_of_max_thrust, rocket.dry_mass, rocket.motor.fuel_mass_curve)
-print(f"Mass at max thrust (kg): {mass_at_max_thrust}")
-max_acceleration = max_thrust / mass_at_max_thrust - con.F_gravity
-max_g = max_acceleration / con.F_gravity
-print(f"Max g: {max_g}\n")
+    Returns:
+        float: The maximum theoretical g-force on the rocket
+    """
+    max_thrust = max(rocket.motor.thrust_curve.values())
+    time_of_max_thrust = max(rocket.motor.thrust_curve, key=rocket.motor.thrust_curve.get)
+    mass_at_max_thrust = hfunc.mass_at_time(time_of_max_thrust, rocket.dry_mass, rocket.motor.fuel_mass_curve)
+    max_acceleration = max_thrust / mass_at_max_thrust - con.F_gravity
+    max_g = max_acceleration / con.F_gravity
+    return max_g
 
-# max q, given no drag, and no parts of the rocket fall off, air density is that at the launchpad
-air_density = hfunc.air_density_fn(Prometheus_launch_conditions.launchpad_pressure, Prometheus_launch_conditions.launchpad_temp + 273.15)
-timestep = 0.0001
-t = 0
-v = 0
-v_max = 0
-while t < rocket.motor.burn_time:
-    mass = hfunc.mass_at_time(t, rocket.dry_mass, rocket.motor.fuel_mass_curve)
-    thrust = hfunc.thrust_at_time(t, rocket.motor.thrust_curve)
-    acceleration = thrust / mass - con.F_gravity
-    if acceleration < 0:
-        acceleration = 0
-    v += acceleration * timestep
-    if v > v_max:
-        v_max = v
-    t += timestep
-print(f"Max velocity (m/s): {v_max}")
-max_q = hfunc.calculate_dynamic_pressure(air_density, v_max)/1000
-print(f"Max q (kPa): {max_q}")
+def max_theoretical_q(rocket, launch_conditions):
+    """
+    Returns the maximum theoretical dynamic pressure on the rocket assuming no drag, the motor performs at or below spec thrust curve, and no parts of the rocket fall off.
+
+    Args:
+        rocket (Rocket): A rocket object
+        launch_conditions (LaunchConditions): A launch conditions object
+
+    Returns:
+        float: The maximum theoretical dynamic pressure on the rocket in kPa
+    """
+    air_density = hfunc.air_density_fn(launch_conditions.launchpad_pressure, launch_conditions.launchpad_temp + 273.15)
+    timestep = 0.0001
+    t = 0
+    v = 0
+    v_max = 0
+    while t < rocket.motor.burn_time:
+        mass = hfunc.mass_at_time(t, rocket.dry_mass, rocket.motor.fuel_mass_curve)
+        thrust = hfunc.thrust_at_time(t, rocket.motor.thrust_curve)
+        acceleration = thrust / mass - con.F_gravity
+        if acceleration < 0:
+            acceleration = 0
+        v += acceleration * timestep
+        if v > v_max:
+            v_max = v
+        t += timestep
+    max_q = hfunc.calculate_dynamic_pressure(air_density, v_max)/1000
+    return max_q
