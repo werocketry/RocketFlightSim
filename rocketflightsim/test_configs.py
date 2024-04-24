@@ -920,14 +920,6 @@ This is the flight that the sim is furthest off from predicting well. Possible r
 
 Could diagnose more by comparing plots of data from the flight computer to plots from the sim, but a bit busy atm
 """
-
-""" Getting more:
-- have only flight data, would need to find more information about the rocket and launch (mass, motor, launch rail length and angle, etc.)
-    - https://github.com/catsystems/euroc21-team-data/tree/main
-    - https://github.com/ISSUIUC/flight-data/tree/master
-- TODO: add the Prometheus flight here
-"""
-
 # could turn LaunchConditions into EnvironmentalConditions, and have T_lapse_rate and g included in it (defaults to Prometheus' values). Lapse rate gives a 10k launch about a 30ft difference, and g gives it about a 10ft difference, so it could account for a decent amount of the error (though I suspect it may be overoptimistic to assume that the sim is that accurate, still need to do a proper error analysis)
 
 past_flights = [NDRT_2020_flight, Valetudo_flight, Juno3_flight, Bella_Lui_flight]
