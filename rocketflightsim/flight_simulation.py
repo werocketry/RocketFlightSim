@@ -39,15 +39,14 @@ def simulate_flight(rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditio
     launchpad_temp = launch_conditions.launchpad_temp + 273.15
     L_launch_rail = launch_conditions.L_launch_rail
     launch_angle = launch_conditions.launch_angle
+    T_lapse_rate = launch_conditions.local_T_lapse_rate
 
     # Initialize simulation variables
     time, height, speed, a_y, a_x, v_y, v_x, Cd_A_rocket, Ma, q = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     angle_to_vertical = np.deg2rad(90 - launch_angle)
 
-    # Calculate constants to be used in air density function
+    # Calculate constants to be used in air density function, set initial air density
     multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, con.F_g_over_R_spec_air_T_lapse_rate))
-
-    # Initialize air density
     air_density = hfunc.air_density_optimized(launchpad_temp, multiplier)
 
     # Store the initial state of the rocket
@@ -105,7 +104,7 @@ def simulate_flight(rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditio
     # Simulate flight from liftoff until the launch rail is cleared
     while height < effective_h_launch_rail:
         # Update environmental conditions based on height
-        temperature = hfunc.temp_at_height(height, launchpad_temp)
+        temperature = hfunc.temp_at_height(height, launchpad_temp, lapse_rate = T_lapse_rate)
         air_density = hfunc.air_density_optimized(temperature, multiplier)
 
         # Calculate Mach number, drag coefficient, and forces
@@ -149,7 +148,7 @@ def simulate_flight(rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditio
     # Flight from launch rail cleared until burnout
     while time < burnout_time:
         # Update environmental conditions based on height
-        temperature = hfunc.temp_at_height(height, launchpad_temp)
+        temperature = hfunc.temp_at_height(height, launchpad_temp, lapse_rate = T_lapse_rate)
         air_density = hfunc.air_density_optimized(temperature, multiplier)
 
         # Calculate Mach number, Drag coefficient, and Forces
@@ -198,7 +197,7 @@ def simulate_flight(rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditio
     mass = dry_mass
 
     while v_y > 0:
-        temperature = hfunc.temp_at_height(height, launchpad_temp)
+        temperature = hfunc.temp_at_height(height, launchpad_temp, lapse_rate = T_lapse_rate)
         air_density = hfunc.air_density_optimized(temperature, multiplier)
 
         # Calculate Mach number, Drag coefficient, and Forces
@@ -272,7 +271,20 @@ def simulate_flight(rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditio
 
 
 # Flight with airbrakes simulation function
-def simulate_airbrakes_flight(pre_brake_flight, rocket=Juno3_rocket, airbrakes=default_airbrakes_model, timestep=default_timestep):
+def simulate_airbrakes_flight(pre_brake_flight, rocket = Juno3_rocket, launch_conditions = Juno3_launch_conditions, airbrakes = default_airbrakes_model, timestep = default_timestep):
+    """
+    Simulate the flight of a rocket during its post-burnout ascent with airbrakes deployed until apogee, given its specifications and environmental conditions.
+
+    Args:
+    - pre_brake_flight (DataFrame): A DataFrame containing the simulation results from the rocket's ascent until burnout. # TODO: change to a tuple of the dataset at the time to start the simulation
+    - rocket (Rocket): An instance of the Rocket class.
+    - launch_conditions (LaunchConditions): An instance of the LaunchConditions class.
+    - airbrakes (Airbrakes): An instance of the Airbrakes class.
+    - timestep (float): The time increment for the simulation in seconds.
+
+    Returns:
+    - tuple: A tuple containing the dataset of simulation results and the time at which the airbrakes are fully deployed.
+    """
     # Extract rocket parameters
     mass = rocket.dry_mass
     Cd_A_rocket_fn = rocket.Cd_A_rocket
@@ -280,6 +292,7 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket=Juno3_rocket, airbrakes=d
     # Extract launch condition parameters
     launchpad_temp = pre_brake_flight.temperature.iloc[0]
     launchpad_pressure = pre_brake_flight.air_density.iloc[0] * con.R_specific_air * launchpad_temp
+    T_lapse_rate = launch_conditions.local_T_lapse_rate
 
     # Calculate constants to be used in air density function
     multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, con.F_g_over_R_spec_air_T_lapse_rate))
@@ -310,7 +323,7 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket=Juno3_rocket, airbrakes=d
     while v_y > 0:
         time += timestep
 
-        temperature = hfunc.temp_at_height(height, launchpad_temp)
+        temperature = hfunc.temp_at_height(height, launchpad_temp, lapse_rate = T_lapse_rate)
         air_density = hfunc.air_density_optimized(temperature, multiplier)
         Ma = hfunc.mach_number_fn(speed, temperature)
         Cd_A_rocket = Cd_A_rocket_fn(Ma)
@@ -385,7 +398,7 @@ if __name__ == "__main__":
     dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=Juno3_rocket, timestep=0.001)
     
     print(dataset[["time", "height", "speed"]].iloc[apogee_index - 1]*3.28084)
-    ascent, time_of_max_deployment = simulate_airbrakes_flight(dataset.iloc[:burnout_index].copy(), rocket=Juno3_rocket, timestep=0.001)
+    ascent, time_of_max_deployment = simulate_airbrakes_flight(dataset.iloc[:burnout_index].copy(), rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditions, timestep=0.001)
     print(ascent[["time", "height", "speed"]].iloc[-1]*3.28084)
 
     # run a couple hundred different timesteps in logspace between 0.001 and 0.1 to see how it changes to help pick a good timestep
@@ -393,7 +406,7 @@ if __name__ == "__main__":
 """    apogees = []
     for timestep in np.logspace(-3, -1, 200):
         dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=Juno3_rocket, timestep=timestep)
-        ascent, time_of_max_deployment = simulate_airbrakes_flight(dataset.iloc[:burnout_index].copy(), rocket=Juno3_rocket, timestep=0.001)
+        ascent, time_of_max_deployment = simulate_airbrakes_flight(dataset.iloc[:burnout_index].copy(), rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditions, timestep=0.001)
         apogees.append(ascent["height"].iloc[-1]*3.28084)
         print(len(apogees))
     # plot them

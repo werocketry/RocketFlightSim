@@ -55,7 +55,9 @@ NDRT_2020_launch_conditions = rocket_classes.LaunchConditions(
     launchpad_pressure = 99109,
     launchpad_temp = 278.03-273.15,
     L_launch_rail = 3.353,
-    launch_angle = 90
+    launch_angle = 90,
+    latitude = 41.775447,
+    altitude = 206
 )
 NDRT_2020_flight = rocket_classes.past_flight(
     rocket = NDRT_2020_rocket,
@@ -348,7 +350,9 @@ Valetudo_launch_conditions = rocket_classes.LaunchConditions(
     launchpad_pressure=94184,
     launchpad_temp=301.53-273.15,
     L_launch_rail=5.7,
-    launch_angle=84.7
+    launch_angle=84.7,
+    latitude=-23.363611,
+    altitude=668
 )
 Valetudo_flight = rocket_classes.past_flight(
     rocket=Valetudo_rocket,
@@ -811,7 +815,9 @@ Juno3_launch_conditions = rocket_classes.LaunchConditions(
     # as per parameters in the GitHub:
     launchpad_temp=306.95-273.15,
     L_launch_rail=5.2,
-    launch_angle=85
+    launch_angle=85,
+    latitude=32.939377,
+    altitude=1480
 )
 Juno3_flight = rocket_classes.past_flight(
     rocket=Juno3_rocket,
@@ -896,7 +902,9 @@ Bella_Lui_launch_conditions = rocket_classes.LaunchConditions(
     launchpad_pressure=98043,
     launchpad_temp=286.63-273.15,
     L_launch_rail=4.2,
-    launch_angle=89
+    launch_angle=89,
+    latitude=47.213476,
+    altitude=407
 )
 Bella_Lui_flight = rocket_classes.past_flight(
     rocket=Bella_Lui_rocket,
@@ -920,7 +928,7 @@ This is the flight that the sim is furthest off from predicting well. Possible r
 
 Could diagnose more by comparing plots of data from the flight computer to plots from the sim, but a bit busy atm
 """
-# could turn LaunchConditions into EnvironmentalConditions, and have T_lapse_rate and g included in it (defaults to Prometheus' values). Lapse rate gives a 10k launch about a 30ft difference, and g gives it about a 10ft difference, so it could account for a decent amount of the error (though I suspect it may be overoptimistic to assume that the sim is that accurate, still need to do a proper error analysis)
+# Lapse rate gives a 10k launch about a 30ft difference, and g gives it about a 10ft difference, so it could account for a decent amount of the error. Though I suspect it may be overoptimistic to assume that the sim is that accurate. Still need to do a proper error analysis
 
 past_flights = [NDRT_2020_flight, Valetudo_flight, Juno3_flight, Bella_Lui_flight]
 
@@ -931,6 +939,9 @@ default_airbrakes_model = rocket_classes.Airbrakes(
     max_deployment_speed = 5.5,  # deg/s
     max_deployment_angle = 45  # deg
 )
+""" Currently taken from airbrakes_model_2024_03_20 in team's airbrakes repo
+TODO: eventually replace with something that feels like a good default
+"""
 
 if __name__ == "__main__":
     import flight_simulation as fsim
