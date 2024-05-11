@@ -5,7 +5,7 @@ import helper_functions as hfunc
 
 def max_theoretical_thrust(rocket):
     """
-    Returns the maximum theoretical g-force on the rocket assuming no drag, the motor performs at or below spec max thrust, and no parts of the rocket fall off.
+    Returns the maximum theoretical g-force that a rocket can reach assuming no drag, the motor performs at or below spec max thrust, and no parts of the rocket fall off.
 
     Args:
         rocket (Rocket): A rocket object
@@ -20,16 +20,16 @@ def max_theoretical_thrust(rocket):
     max_g = max_acceleration / con.F_gravity
     return max_g
 
-def max_theoretical_q(rocket, launch_conditions):
+def max_theoretical_speed(rocket, launch_conditions):
     """
-    Returns the maximum theoretical dynamic pressure on the rocket assuming no drag, the motor performs at or below spec thrust curve, and no parts of the rocket fall off.
+    Returns the maximum theoretical theoretical speed that a rocket can reach assuming no drag, the motor performs at or below spec thrust curve, and no parts of the rocket fall off.
 
     Args:
         rocket (Rocket): A rocket object
         launch_conditions (LaunchConditions): A launch conditions object
 
     Returns:
-        float: The maximum theoretical dynamic pressure on the rocket in kPa
+        float: The maximum theoretical speed the rocket can reach in m/s
     """
     air_density = hfunc.air_density_fn(launch_conditions.launchpad_pressure, launch_conditions.launchpad_temp + 273.15)
     timestep = 0.0001
@@ -46,5 +46,5 @@ def max_theoretical_q(rocket, launch_conditions):
         if v > v_max:
             v_max = v
         t += timestep
-    max_q = hfunc.calculate_dynamic_pressure(air_density, v_max)/1000
-    return max_q
+    
+    return v_max

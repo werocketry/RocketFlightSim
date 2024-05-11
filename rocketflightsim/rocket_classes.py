@@ -74,7 +74,7 @@ class LaunchConditions:
 
     def __init__(self, launchpad_pressure, launchpad_temp, L_launch_rail, launch_angle, local_gravity=None, local_T_lapse_rate=-0.0065, latitude=None, altitude=0):
         self.launchpad_pressure = launchpad_pressure
-        self.launchpad_temp = launchpad_temp
+        self.launchpad_temp = launchpad_temp # TODO: maybe make it convert to Kelvin
         self.L_launch_rail = L_launch_rail
         self.launch_angle = launch_angle
 
@@ -88,7 +88,6 @@ class LaunchConditions:
                 
         self.local_gravity = local_gravity
         
-
 
 class Airbrakes:
     """
@@ -110,7 +109,8 @@ class Airbrakes:
         self.max_deployment_speed = max_deployment_speed
         self.max_deployment_angle = max_deployment_angle
 
-class past_flight ():
+
+class PastFlight ():
     """
     Stores the rocket, launch conditions, and apogee of a past flight
     likely add more things like max speed, max acceleration later

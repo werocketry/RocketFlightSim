@@ -1,6 +1,4 @@
 # constants 
-F_gravity = 9.791327  # m/s^2
-T_lapse_rate = -0.00817  # K/m
 R_universal = 8.3144598  # J/(mol*K)
 MM_air = 0.0289644  # kg/mol
 adiabatic_index_air = 1.4  # unitless
@@ -29,10 +27,13 @@ As per https://www.grc.nasa.gov/WWW/BGH/realspec.html, air is calorically perfec
 R_specific_air = R_universal / MM_air  # J/(kg*K)
 adiabatic_index_air_times_R_specific_air = adiabatic_index_air * R_specific_air  # J/(kg*K)
 
+# conversion factors
+m_to_ft_conversion = 3.28084  # ft/m
+
+# default launch site values
+F_gravity = 9.80665  # m/s^2, if given latitude and altitude, calculated using helper_functions.get_local_gravity
+T_lapse_rate = -0.00817  # K/m, can be specified when creating a LaunchConditions object
+
 # TODO: make these change with different F_gravity and T_lapse_rate (move them somewhere else)
 F_g_over_R_spec_air_T_lapse_rate = F_gravity / (R_specific_air * T_lapse_rate) # unitless
 F_g_over_R_spec_air_T_lapse_rate_minus_one = F_g_over_R_spec_air_T_lapse_rate - 1  # unitless
-
-
-# conversion factors
-m_to_ft_conversion = 3.28084  # ft/m

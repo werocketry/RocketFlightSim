@@ -2,7 +2,6 @@ import numpy as np
 import constants as con
 
 # aerodynamics
-
 def temp_at_height(h, launchpad_temp, lapse_rate = con.T_lapse_rate):
     """
     Calculate the temperature at a given height above the launchpad.
@@ -71,11 +70,11 @@ def calculate_dynamic_pressure(air_density, speed):
 
 def mach_number_fn(v, temp):
     """
-    Calculate the Mach number of an object moving in air at a given temperature.
+    Calculate the Mach number of an object moving through air at a given temperature.
 
     Args:
-    - v (float): Velocity in meters per second.
-    - temp (float): Temperature in Kelvin.
+    - v (float): Velocity of the object relative to the air in meters per second.
+    - temp (float): Air temperature in Kelvin.
 
     Returns:
     - float: Mach number (dimensionless).
@@ -87,8 +86,6 @@ def get_local_gravity(latitude, h = 0, h_expected = None):
     """
     Calculate the acceleration due to gravity at a given latitude and height above sea level.
 
-    https://en.wikipedia.org/wiki/Theoretical_gravity#International_gravity_formula_1980
-
     Args:
     - latitude (float): Latitude of launch site in degrees.
     - h (float): Ground level elevation above sea level in meters. Defaults to 0.
@@ -96,6 +93,8 @@ def get_local_gravity(latitude, h = 0, h_expected = None):
 
     Returns:
     - float: Acceleration due to gravity in meters per second squared.
+
+    Based on the International Gravity Formula 1980 (IGF80) model, as outlined in https://en.wikipedia.org/wiki/Theoretical_gravity#International_gravity_formula_1980
     """
 
     gamma_a = 9.780327  # m/s^2

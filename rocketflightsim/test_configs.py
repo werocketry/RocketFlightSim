@@ -59,7 +59,7 @@ NDRT_2020_launch_conditions = rocket_classes.LaunchConditions(
     latitude = 41.775447,
     altitude = 206
 )
-NDRT_2020_flight = rocket_classes.past_flight(
+NDRT_2020_flight = rocket_classes.PastFlight(
     rocket = NDRT_2020_rocket,
     launch_conditions = NDRT_2020_launch_conditions,
     apogee = 1317,
@@ -354,7 +354,7 @@ Valetudo_launch_conditions = rocket_classes.LaunchConditions(
     latitude=-23.363611,
     altitude=668
 )
-Valetudo_flight = rocket_classes.past_flight(
+Valetudo_flight = rocket_classes.PastFlight(
     rocket=Valetudo_rocket,
     launch_conditions=Valetudo_launch_conditions,
     apogee=860,
@@ -819,7 +819,7 @@ Juno3_launch_conditions = rocket_classes.LaunchConditions(
     latitude=32.939377,
     altitude=1480
 )
-Juno3_flight = rocket_classes.past_flight(
+Juno3_flight = rocket_classes.PastFlight(
     rocket=Juno3_rocket,
     launch_conditions=Juno3_launch_conditions,
     apogee=3213,
@@ -906,7 +906,7 @@ Bella_Lui_launch_conditions = rocket_classes.LaunchConditions(
     latitude=47.213476,
     altitude=407
 )
-Bella_Lui_flight = rocket_classes.past_flight(
+Bella_Lui_flight = rocket_classes.PastFlight(
     rocket=Bella_Lui_rocket,
     launch_conditions=Bella_Lui_launch_conditions,
     apogee=458.97,
