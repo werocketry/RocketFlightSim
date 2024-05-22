@@ -1,13 +1,16 @@
 # flight data from other teams to test the simulator
+import sys
+import os
 
 import numpy as np
-import rocket_classes
-import constants as con
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from rocketflightsim.rocket_classes import Motor, Rocket, LaunchConditions, Airbrakes, PastFlight
 
 """ Notre Dame Rocket Team Rocket 2020
 https://github.com/RocketPy-Team/RocketPy/blob/master/docs/examples/ndrt_2020_flight_sim.ipynb
 """
-Cesaroni_4895L1395_P = rocket_classes.Motor(
+Cesaroni_4895L1395_P = Motor(
     # https://www.thrustcurve.org/simfiles/5f4294d20002e90000000614/
     dry_mass = 1.958,
     thrust_curve = {
@@ -43,14 +46,14 @@ Cesaroni_4895L1395_P = rocket_classes.Motor(
         3.45: 0
     }
 )
-NDRT_2020_rocket = rocket_classes.Rocket(
+NDRT_2020_rocket = Rocket(
     # as per parameters in the GitHub
     rocket_mass = 18.998,
     motor = Cesaroni_4895L1395_P,
     A_rocket = np.pi * 0.1015 ** 2,
     Cd_rocket_at_Ma = 0.44
 )
-NDRT_2020_launch_conditions = rocket_classes.LaunchConditions(
+NDRT_2020_launch_conditions = LaunchConditions(
     # as per parameters in the GitHub, and using RocketPy to get launchpad pressure and temp from their weather data file (https://github.com/RocketPy-Team/RocketPy/blob/master/tests/fixtures/acceptance/NDRT_2020/ndrt_2020_weather_data_ERA5.nc)
     launchpad_pressure = 99109,
     launchpad_temp = 278.03-273.15,
@@ -59,7 +62,7 @@ NDRT_2020_launch_conditions = rocket_classes.LaunchConditions(
     latitude = 41.775447,
     altitude = 206
 )
-NDRT_2020_flight = rocket_classes.PastFlight(
+NDRT_2020_flight = PastFlight(
     rocket = NDRT_2020_rocket,
     launch_conditions = NDRT_2020_launch_conditions,
     apogee = 1317,
@@ -69,7 +72,7 @@ NDRT_2020_flight = rocket_classes.PastFlight(
 """ Valetudo - Projeto Jupiter - 2019
 https://github.com/RocketPy-Team/RocketPy/blob/master/docs/examples/valetudo_flight_sim.ipynb
 """
-keron = rocket_classes.Motor(
+keron = Motor(
     dry_mass=0.001, # total dry mass of the rocket includes motor dry mass in the RocketPy ipynb (they put 0.001 for the motor dry mass)
     thrust_curve={
         # Thrust: https://github.com/RocketPy-Team/RocketPy/blob/master/data/motors/keron/thrustCurve.csv
@@ -337,7 +340,7 @@ ax2.set_ylabel('Fuel mass (kg)', color='r')
 ax2.tick_params('y', colors='r')
 plt.show()
 """
-Valetudo_rocket = rocket_classes.Rocket(
+Valetudo_rocket = Rocket(
     rocket_mass=8.257,
     motor=keron,
     A_rocket=np.pi*0.04045**2,
@@ -345,7 +348,7 @@ Valetudo_rocket = rocket_classes.Rocket(
         # they define a drag coefficient of (0.9081/1.05) in the notebook, but they have a few different curves here: https://github.com/RocketPy-Team/RocketPy/tree/master/tests/fixtures/acceptance/PJ_Valetudo
         # none of them were made with CFD, so they're all probably far enough off that it's not worth the effort to spend time on it
 )
-Valetudo_launch_conditions = rocket_classes.LaunchConditions(
+Valetudo_launch_conditions = LaunchConditions(
     # as per parameters in the GitHub
     launchpad_pressure=94184,
     launchpad_temp=301.53-273.15,
@@ -354,7 +357,7 @@ Valetudo_launch_conditions = rocket_classes.LaunchConditions(
     latitude=-23.363611,
     altitude=668
 )
-Valetudo_flight = rocket_classes.PastFlight(
+Valetudo_flight = PastFlight(
     rocket=Valetudo_rocket,
     launch_conditions=Valetudo_launch_conditions,
     apogee=860,
@@ -638,7 +641,7 @@ def reshape_thrust_curve(thrust_curve, total_impulse, burn_time):
     return {new_time_array[i]: new_thrust_array[i] for i in range(len(new_time_array))}
 total_impulse, burn_time = 8800, 5.8
 reshaped_mandioca_thrust_curve = reshape_thrust_curve(mandioca_thrust_curve, total_impulse, burn_time)
-mandioca = rocket_classes.Motor(
+mandioca = Motor(
     dry_mass=0.00000000001, # total dry mass of the rocket includes motor dry mass in the RocketPy ipynb (they put 0.00000000001 for the motor dry mass)
     thrust_curve=reshaped_mandioca_thrust_curve,
     fuel_mass_curve={0:8.169}
@@ -803,13 +806,13 @@ plt.xlabel("Mach number")
 plt.ylabel("Cd")
 plt.show()
 """
-Juno3_rocket = rocket_classes.Rocket(
+Juno3_rocket = Rocket(
     rocket_mass=24.05,
     motor=mandioca,
     A_rocket=np.pi*0.0655**2,
     Cd_rocket_at_Ma=Juno3_Cd_rocket_at_Ma
 )
-Juno3_launch_conditions = rocket_classes.LaunchConditions(
+Juno3_launch_conditions = LaunchConditions(
     # note that launchpad pressure in the GitHub notebook is 84992 Pa, but the SRAD flight computer read 86260.99854 on the ground, and the COTS flight computer read 86170 Pa. Going to stick with 84992, precision of the value makes me think it was measured with some other instrument
     launchpad_pressure=84992,
     # as per parameters in the GitHub:
@@ -819,7 +822,7 @@ Juno3_launch_conditions = rocket_classes.LaunchConditions(
     latitude=32.939377,
     altitude=1480
 )
-Juno3_flight = rocket_classes.PastFlight(
+Juno3_flight = PastFlight(
     rocket=Juno3_rocket,
     launch_conditions=Juno3_launch_conditions,
     apogee=3213,
@@ -829,7 +832,7 @@ Juno3_flight = rocket_classes.PastFlight(
 """ Bella Lui - EPFL - 2020
 https://github.com/RocketPy-Team/RocketPy/blob/master/docs/examples/bella_lui_flight_sim.ipynb
 """
-K828FJ = rocket_classes.Motor(
+K828FJ = Motor(
     dry_mass=0.001, # total dry mass of the rocket includes motor dry mass in the RocketPy ipynb (they put 0.001 for the motor dry mass)
     thrust_curve={ # https://www.thrustcurve.org/simfiles/5f4294d20002e90000000442/
         0:0,
@@ -892,13 +895,13 @@ K828FJ = rocket_classes.Motor(
         2.5:0
     }
 )
-Bella_Lui_rocket = rocket_classes.Rocket(
+Bella_Lui_rocket = Rocket(
     rocket_mass = 18.227 - 0.001,
     motor=K828FJ,
     A_rocket=np.pi*(156/2000)**2,
     Cd_rocket_at_Ma=0.43
 )
-Bella_Lui_launch_conditions = rocket_classes.LaunchConditions(
+Bella_Lui_launch_conditions = LaunchConditions(
     launchpad_pressure=98043,
     launchpad_temp=286.63-273.15,
     L_launch_rail=4.2,
@@ -906,7 +909,7 @@ Bella_Lui_launch_conditions = rocket_classes.LaunchConditions(
     latitude=47.213476,
     altitude=407
 )
-Bella_Lui_flight = rocket_classes.PastFlight(
+Bella_Lui_flight = PastFlight(
     rocket=Bella_Lui_rocket,
     launch_conditions=Bella_Lui_launch_conditions,
     apogee=458.97,
@@ -932,7 +935,7 @@ Could diagnose more by comparing plots of data from the flight computer to plots
 
 past_flights = [NDRT_2020_flight, Valetudo_flight, Juno3_flight, Bella_Lui_flight]
 
-default_airbrakes_model = rocket_classes.Airbrakes(
+default_airbrakes_model = Airbrakes(
     num_flaps = 3,
     A_flap = 0.00395,  # m^2  flap area
     Cd_brakes = 1,
@@ -944,7 +947,7 @@ TODO: eventually replace with something that feels like a good default
 """
 
 if __name__ == "__main__":
-    import flight_simulation as fsim
+    from rocketflightsim.flight_simulation import FlightSimulation as fsim
 
     for past_flight in past_flights:
         print(f"Rocket: {past_flight.name}")
@@ -972,7 +975,6 @@ if __name__ == "__main__":
     # v_y = dataset["v_y"][:apogee_index].copy()
     # a_y = dataset["a_y"][:apogee_index].copy()
     # a_x = dataset["a_x"][:apogee_index].copy()
-    # g_force = np.sqrt(a_y**2 + a_x**2) / con.F_gravity
 
     # pf.plot_aerodynamics(
     #         time,

@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import constants as con
-import helper_functions as hfunc
+from . import constants as con
+from . import helper_functions as hfunc
 
 
 def plot_ascent(time, height, speed, v_y, a_y, unit="m"):

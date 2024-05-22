@@ -1,5 +1,5 @@
 import numpy as np
-import constants as con
+from . import constants as con
 
 # aerodynamics
 def temp_at_height(h, launchpad_temp, lapse_rate = con.T_lapse_rate):

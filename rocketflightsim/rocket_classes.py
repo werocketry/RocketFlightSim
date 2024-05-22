@@ -1,7 +1,7 @@
 # Define Motor, Rocket, LaunchConditions, and Airbrakes classes
 
 import numpy as np
-import helper_functions as hfunc
+from . import helper_functions as hfunc
 
 class Motor:
     """
