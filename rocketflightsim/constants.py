@@ -30,10 +30,6 @@ adiabatic_index_air_times_R_specific_air = adiabatic_index_air * R_specific_air 
 # conversion factors
 m_to_ft_conversion = 3.28084  # ft/m
 
-# default launch site values
-F_gravity = 9.80665  # m/s^2, if given latitude and altitude, calculated using helper_functions.get_local_gravity
-T_lapse_rate = -0.00817  # K/m, can be specified when creating a LaunchConditions object
-
-# TODO: make these change with different F_gravity and T_lapse_rate (move them somewhere else)
-F_g_over_R_spec_air_T_lapse_rate = F_gravity / (R_specific_air * T_lapse_rate) # unitless
-F_g_over_R_spec_air_T_lapse_rate_minus_one = F_g_over_R_spec_air_T_lapse_rate - 1  # unitless
+# default launch site values. Specific launch site values can be set in LaunchConditions objects
+F_gravity = 9.80665  # m/s^2
+T_lapse_rate = -0.0065  # K/m

@@ -324,13 +324,14 @@ keron = Motor(
     # make the fuel burn speed proportional to the thrust
 )
 total_impulse = 1415.154
+times = list(keron.thrust_curve.keys())
 for i in range(1, len(keron.thrust_curve)):
-    keron.fuel_mass_curve[list(keron.thrust_curve.keys())[i]] = keron.fuel_mass_curve[list(keron.thrust_curve.keys())[i-1]] - (keron.thrust_curve[list(keron.thrust_curve.keys())[i]] + keron.thrust_curve[list(keron.thrust_curve.keys())[i-1]])/2 * (list(keron.thrust_curve.keys())[i] - list(keron.thrust_curve.keys())[i-1]) / total_impulse * 1.409
+    keron.fuel_mass_curve[times[i]] = keron.fuel_mass_curve[times[i-1]] - (keron.thrust_curve[times[i]] + keron.thrust_curve[times[i-1]])/2 * (times[i] - times[i-1]) / total_impulse * 1.409
 """ # Visualization of the fuel mass curve compared to the thrust curve
 # plot the fuel burn speed and the thrust on the same graph (different scales)
 import matplotlib.pyplot as plt
 fig, ax1 = plt.subplots()
-ax1.plot(list(keron.thrust_curve.keys()), [keron.thrust_curve[i] for i in keron.thrust_curve], 'b-')
+ax1.plot(times, [keron.thrust_curve[i] for i in keron.thrust_curve], 'b-')
 ax1.set_xlabel('time (s)')
 ax1.set_ylabel('Thrust (N)', color='b')
 ax1.tick_params('y', colors='b')
@@ -915,11 +916,13 @@ Bella_Lui_flight = PastFlight(
     apogee=458.97,
     name="Bella Lui 2020"
 )
-"""
+""" TODO: investigate why the sim performs so poorly on this flight compared to the others
 This is the flight that the sim is furthest off from predicting well. Possible reasons:
 - weak motor, short and quick flight leads to:
     - various small effects not accounted for in the sim made more significant
     - can't put the energy into wording it right now, but intuition
+    - try simulating from burnout to apogee to see if the sim is more accurate there
+    - would wind have a larger effect?
 - not confident in the values the notebook provides for the motor:
     - adding on the motor mass from thrustcurve.org, the sim gives an error of -14.76, instead of +24.63
         - also lended some credence due to the sim also underestimating the other 3 flights
@@ -928,59 +931,77 @@ This is the flight that the sim is furthest off from predicting well. Possible r
             - https://www.researchgate.net/publication/354034513_RocketPy_Six_Degree-of-Freedom_Rocket_Trajectory_Simulator
 - using a constant Cd may not be a great approximation for a rocket hitting about Mach 0.25 
     - also, no mention of where the Cd value comes from. If it's ork or RasAero, it's likely not accurate. If it was CFD, they likely would have given a curve
-
+- no local variation in lapse rate from the standard lapse rate accounted for. Based on how it affects a 10k launch, it can improve the accuracy by about 0.3%, which might be another small factor
 Could diagnose more by comparing plots of data from the flight computer to plots from the sim, but a bit busy atm
 """
-# Lapse rate gives a 10k launch about a 30ft difference, and g gives it about a 10ft difference, so it could account for a decent amount of the error. Though I suspect it may be overoptimistic to assume that the sim is that accurate. Still need to do a proper error analysis
 
 past_flights = [NDRT_2020_flight, Valetudo_flight, Juno3_flight, Bella_Lui_flight]
 
 default_airbrakes_model = Airbrakes(
     num_flaps = 3,
-    A_flap = 0.00395,  # m^2  flap area
+    A_flap = 0.004,  # m^2  flap area
     Cd_brakes = 1,
-    max_deployment_speed = 5.5,  # deg/s
+    max_deployment_speed = 5,  # deg/s
     max_deployment_angle = 45  # deg
 )
-""" Currently taken from airbrakes_model_2024_03_20 in team's airbrakes repo
-TODO: eventually replace with something that feels like a good default
+
+# LaunchConditions class configurations
+local_T_lapse_rate_SA = -0.00817  # K/m
+""" How T_lapse_rate at Spaceport America was determined
+
+Only one source was found with the lapse rate for Spaceport America:
+    - https://egusphere.copernicus.org/preprints/2023/egusphere-2023-633/egusphere-2023-633.pdf
+    - luckily, they took their measurements in June
+    - The lapse rates for the stratosphere for each of three flights were reported as follows:
+        - June 1st 2021 -8.4 K/km
+        - June 4th 2021 -7.9 K/km
+        - June 6th 2021 -8.2 K/km
+    - An average of these is what was chosen for the simulation
+    - The linear lapse rate was valid for the first 10 km AGL
+
+For future reference, it should be noted that time of year has a large effect on the lapse rate, as reported in:
+    - https://mdpi-res.com/d_attachment/remotesensing/remotesensing-14-00162/article_deploy/remotesensing-14-00162.pdf?version=1640917080
+    - https://hwbdocs.env.nm.gov/Los%20Alamos%20National%20Labs/TA%2004/2733.PDF
+        - states that the average lapse rate in NM is:
+            - -4.0F/1000ft (-7.3 K/km) in July
+            - -2.5F/1000ft (-4.6 K/km) in January
+        - -8.2 K/km is higher than the summer average, but generally desert areas have higher-than-normal lapse rates
+
+The following was the most comprehensive source found for temperature lapse rates in New Mexico: 
+- https://pubs.usgs.gov/bul/1964/report.pdf
+- No values were found for Spaceport itself, but values for other locations in New Mexico were found
+- the report says that in the western conterminous United States, temperature lapse rates are generally significantly less than the standard -6.5 K/km
+- the report didn't include the date (or month) of the measurements, so I'd assume that it happened in the winter due to the low lapse rates, and/or the data being several decades old means that it's no longer as accurate due to the changing global climate
+- has values for many locations in New Mexico (search for n. mex), and they ranged from -1.4 to -3.9 K/km
+    - the closest station to SC was Datil, which had a lapse rate of -3.1 K/km
 """
+L_launch_rail_ESRA_provided_SAC = 5.18  # m, 
+""" ESRA provides teams with a 5.18m rail at competition """
+launchpad_pressure_SA = 86400  # Pa
+""" How the launchpad pressure at Spaceport America was determined
 
-if __name__ == "__main__":
-    from rocketflightsim.flight_simulation import FlightSimulation as fsim
+- 86400 2022/06/24   WE Rocketry 2022 TeleMega/TeleMetrum data
+- 86405 2022/06/23   https://github.com/ISSUIUC/flight-data/tree/master/20220623
+- 86170 2023/06/21   https://github.com/ISSUIUC/flight-data/tree/master/20230621
+- Truth or Consequences, NM, USA, which has an elevation 90 m lower than Spaceport America
+    - 84780 http://cms.ashrae.biz/weatherdata/STATIONS/722710_s.pdf
+"""
+launchpad_temp_Prometheus = 34  # deg C
+    # TODO: find average temp at SA on launch days at launch times
+""" From https://www.timeanddate.com/weather/@5492576/historic?month=6&year=2023 """
+latitude_SA = 32.99  # deg, Spaceport America's latitude
+""" https://maps.app.goo.gl/rZT6MRLqHneA7wNX7 """
+altitude_SA = 1401  # m, Spaceport America's elevation
+""" https://www.spaceportamerica.com/faq/#toggle-id-15"""
+launch_angle_SAC = 84  # deg from horizontal
+""" Per DTEG 10.1.1 """ # TODO: talk more about determination of launch rail angle at comp here
 
-    for past_flight in past_flights:
-        print(f"Rocket: {past_flight.name}")
-        apogee = fsim.simulate_flight(past_flight.rocket, past_flight.launch_conditions, timestep = 0.001)[0]['height'].iloc[-1]
-        print(f"\tApogee prediction: {apogee:.2f} m")
-        print(f"\tActual apogee: {past_flight.apogee:.2f} m")
-        print(f"\tError: {apogee - past_flight.apogee:.2f} m")
-        print(f"\tPercent error: {(apogee - past_flight.apogee)/past_flight.apogee*100:.2f} %")
-        # note that the sim doesn't account for wind yet, will bring predicted apogee down
-
-    # past_flight = Juno3_flight
-    # # plot the flight
-    # import plotting_functions as pf
-    # (
-    #         dataset,
-    #         liftoff_index,
-    #         launch_rail_cleared_index,
-    #         burnout_index,
-    #         apogee_index,
-    # ) = fsim.simulate_flight(past_flight.rocket, past_flight.launch_conditions, timestep = 0.001)
-
-    # time = dataset["time"][:apogee_index]
-    # height = dataset["height"][:apogee_index].copy()
-    # speed = dataset["speed"][:apogee_index].copy()
-    # v_y = dataset["v_y"][:apogee_index].copy()
-    # a_y = dataset["a_y"][:apogee_index].copy()
-    # a_x = dataset["a_x"][:apogee_index].copy()
-
-    # pf.plot_aerodynamics(
-    #         time,
-    #         height,
-    #         speed,
-    #         dataset["q"],
-    #         dataset["angle_to_vertical"],
-    #         dataset["air_density"],
-    #         )
+Spaceport_America_avg_launch_conditions = LaunchConditions(
+    launchpad_pressure = launchpad_pressure_SA,
+    launchpad_temp = launchpad_temp_Prometheus,
+    L_launch_rail = L_launch_rail_ESRA_provided_SAC,
+    launch_angle = launch_angle_SAC,
+    local_T_lapse_rate = local_T_lapse_rate_SA,
+    latitude = latitude_SA,
+    altitude = altitude_SA
+)

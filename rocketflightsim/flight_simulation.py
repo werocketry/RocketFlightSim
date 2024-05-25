@@ -42,15 +42,24 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     launchpad_temp = launch_conditions.launchpad_temp + 273.15
     L_launch_rail = launch_conditions.L_launch_rail
     launch_angle = launch_conditions.launch_angle
-    T_lapse_rate = launch_conditions.local_T_lapse_rate
+    
+    if launch_conditions.local_T_lapse_rate:
+        T_lapse_rate = launch_conditions.local_T_lapse_rate
+    else:
+        T_lapse_rate = con.T_lapse_rate
+    
+    if launch_conditions.local_gravity:
+        F_gravity = launch_conditions.local_gravity
+    else:
+        F_gravity = con.F_gravity
 
     # Initialize simulation variables
     time, height, speed, a_y, a_x, v_y, v_x, Cd_A_rocket, Ma, q = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     angle_to_vertical = np.deg2rad(90 - launch_angle)
-
     # Calculate constants to be used in air density function, set initial air density
-    multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, con.F_g_over_R_spec_air_T_lapse_rate))
-    air_density = hfunc.air_density_optimized(launchpad_temp, multiplier)
+    multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, - F_gravity / (con.R_specific_air * T_lapse_rate)))
+    exponent = - F_gravity / (con.R_specific_air * T_lapse_rate) - 1
+    air_density = hfunc.air_density_optimized(launchpad_temp, multiplier, exponent)
 
     # Store the initial state of the rocket
     simulated_values = [
@@ -75,7 +84,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     while (
         hfunc.thrust_at_time(time, engine_thrust_lookup)
         / hfunc.mass_at_time(time, dry_mass, fuel_mass_lookup)
-        <= con.F_gravity
+        <= F_gravity
     ):
         time += timestep
         # Append simulation values for each timestep
@@ -108,7 +117,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     while height < effective_h_launch_rail:
         # Update environmental conditions based on height
         temperature = hfunc.temp_at_height(height, launchpad_temp, lapse_rate = T_lapse_rate)
-        air_density = hfunc.air_density_optimized(temperature, multiplier)
+        air_density = hfunc.air_density_optimized(temperature, multiplier,exponent)
 
         # Calculate Mach number, drag coefficient, and forces
         Ma = hfunc.mach_number_fn(speed, temperature)
@@ -119,7 +128,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
         # Update rocket's motion parameters
         mass = hfunc.mass_at_time(time, dry_mass, fuel_mass_lookup)
         thrust = hfunc.thrust_at_time(time, engine_thrust_lookup)
-        a_y = (thrust - F_drag) * np.cos(angle_to_vertical) / mass - con.F_gravity
+        a_y = (thrust - F_drag) * np.cos(angle_to_vertical) / mass - F_gravity
         a_x = (thrust - F_drag) * np.sin(angle_to_vertical) / mass
         v_y += a_y * timestep
         v_x += a_x * timestep
@@ -152,7 +161,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     while time < burnout_time:
         # Update environmental conditions based on height
         temperature = hfunc.temp_at_height(height, launchpad_temp, lapse_rate = T_lapse_rate)
-        air_density = hfunc.air_density_optimized(temperature, multiplier)
+        air_density = hfunc.air_density_optimized(temperature, multiplier,exponent)
 
         # Calculate Mach number, Drag coefficient, and Forces
         Ma = hfunc.mach_number_fn(speed, temperature)
@@ -163,7 +172,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
         # Update rocket's motion parameters
         mass = hfunc.mass_at_time(time, dry_mass, fuel_mass_lookup)
         thrust = hfunc.thrust_at_time(time, engine_thrust_lookup)
-        a_y = (thrust - F_drag) * np.cos(angle_to_vertical) / mass - con.F_gravity
+        a_y = (thrust - F_drag) * np.cos(angle_to_vertical) / mass - F_gravity
         a_x = (thrust - F_drag) * np.sin(angle_to_vertical) / mass
         v_y += a_y * timestep
         v_x += a_x * timestep
@@ -201,7 +210,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
 
     while v_y > 0:
         temperature = hfunc.temp_at_height(height, launchpad_temp, lapse_rate = T_lapse_rate)
-        air_density = hfunc.air_density_optimized(temperature, multiplier)
+        air_density = hfunc.air_density_optimized(temperature, multiplier,exponent)
 
         # Calculate Mach number, Drag coefficient, and Forces
         Ma = hfunc.mach_number_fn(speed, temperature)
@@ -210,7 +219,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
         F_drag = q * Cd_A_rocket
 
         # Update rocket's motion parameters
-        a_y = -F_drag * np.cos(angle_to_vertical) / mass - con.F_gravity
+        a_y = -F_drag * np.cos(angle_to_vertical) / mass - F_gravity
         a_x = -F_drag * np.sin(angle_to_vertical) / mass
         v_y += a_y * timestep
         v_x += a_x * timestep
@@ -295,10 +304,20 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbr
     # Extract launch condition parameters
     launchpad_temp = pre_brake_flight.temperature.iloc[0]
     launchpad_pressure = pre_brake_flight.air_density.iloc[0] * con.R_specific_air * launchpad_temp
-    T_lapse_rate = launch_conditions.local_T_lapse_rate
+
+    if launch_conditions.local_T_lapse_rate:
+        T_lapse_rate = launch_conditions.local_T_lapse_rate
+    else:
+        T_lapse_rate = con.T_lapse_rate
+    
+    if launch_conditions.local_gravity:
+        F_gravity = launch_conditions.local_gravity
+    else:
+        F_gravity = con.F_gravity
 
     # Calculate constants to be used in air density function
-    multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, con.F_g_over_R_spec_air_T_lapse_rate))
+    multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, - F_gravity / (con.R_specific_air * T_lapse_rate)))
+    exponent = - F_gravity / (con.R_specific_air * T_lapse_rate) - 1
 
     # Extract airbrakes parameters
     Cd_brakes = airbrakes.Cd_brakes
@@ -327,7 +346,7 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbr
         time += timestep
 
         temperature = hfunc.temp_at_height(height, launchpad_temp, lapse_rate = T_lapse_rate)
-        air_density = hfunc.air_density_optimized(temperature, multiplier)
+        air_density = hfunc.air_density_optimized(temperature, multiplier,exponent)
         Ma = hfunc.mach_number_fn(speed, temperature)
         Cd_A_rocket = Cd_A_rocket_fn(Ma)
         q = hfunc.calculate_dynamic_pressure(air_density, speed)
@@ -340,7 +359,7 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbr
 
 
         F_drag = q * (np.sin(deployment_angle) * A_Cd_brakes + Cd_A_rocket)
-        a_y = -F_drag * np.cos(angle_to_vertical) / mass - con.F_gravity
+        a_y = -F_drag * np.cos(angle_to_vertical) / mass - F_gravity
         a_x = -F_drag * np.sin(angle_to_vertical) / mass
         v_y += a_y * timestep
         v_x += a_x * timestep
@@ -394,9 +413,6 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbr
 
     return ascent, time_of_max_deployment
 
-
-if __name__ == "__main__":
-    pass 
 
 # TODO: move this to a test file
     # run a couple hundred different timesteps in logspace between 0.001 and 0.1 to see how it changes to help pick a good timestep

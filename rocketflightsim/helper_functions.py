@@ -4,11 +4,12 @@ from . import constants as con
 # aerodynamics
 def temp_at_height(h, launchpad_temp, lapse_rate = con.T_lapse_rate):
     """
-    Calculate the temperature at a given height above the launchpad.
+    Calculate the temperature at a given height above the launchpad. Within the troposphere, the temperature decreases linearly with height at a rate known as the lapse rate. The lapse rate is typically around 6.5 degrees Celsius per kilometer. 
 
     Args:
     - h (float): Height above the launchpad in meters.
     - launchpad_temp (float): Temperature at the launchpad in Celsius or Kelvin.
+    - lapse_rate (float, optional): Rate at which temperature decreases with height in degrees Celsius or Kelvin per meter. Defaults to the standard lapse rate of 0.0065.
 
     Returns:
     - float: Temperature at the given height in Celsius or Kelvin (same as input).
@@ -28,7 +29,7 @@ def pressure_at_height(h, launchpad_temp, launchpad_pressure):
     """
     return launchpad_pressure * pow(
         (1 - (h * con.T_lapse_rate / launchpad_temp)),
-        (con.F_g_over_R_spec_air_T_lapse_rate)
+        (con.F_gravity / (con.R_specific_air * con.T_lapse_rate))
     )
 def air_density_fn(pressure, temp):
     """
@@ -42,18 +43,19 @@ def air_density_fn(pressure, temp):
     - float: Air density in kilograms per cubic meter.
     """
     return pressure / (con.R_specific_air * temp)
-def air_density_optimized(temp, multiplier):
+def air_density_optimized(temp, multiplier, exponent):
     """
     Calculate the density of air at a given height above the launchpad.
 
     Args:
     - temp (float): Temperature at the given height in Kelvin.
-    - multiplier (float): A constant derived from the temperature and pressure at the launchpad, the lapse rate, the specific gas constant for air, and the value for gravity near the Earth's surface. Calculated at the start of the simulation script outside of the main loops. Equal to P_launchpad / (R_air * pow(T_launchpad, Fg_over_R_spec_air_T_lapse_rate)).
+    - multiplier (float): A constant derived from the temperature and pressure at the launchpad, the lapse rate, the specific gas constant for air, and the magnitude of the force of gravity. Calculated at the start of the simulation script outside of the main loops. Equal to P_launchpad / (R_air * pow(T_launchpad, - F_gravity / (R_air * T_lapse_rate))).
+    - exponent (float): A constant derived from the lapse rate, the specific gas constant for air, and the magnitude of the force of gravity. Calculated at the start of the simulation script outside of the main loops. Equal to - F_gravity / (R_air * T_lapse_rate) - 1.
 
     Returns:
     - float: Air density at the given height in kilograms per cubic meter.
     """
-    return multiplier * pow(temp, con.F_g_over_R_spec_air_T_lapse_rate_minus_one)
+    return multiplier * pow(temp, exponent)
 
 def calculate_dynamic_pressure(air_density, speed):
     """
