@@ -8,11 +8,11 @@ import unittest
 from rocketflightsim.rocket_classes import Motor, Rocket, LaunchConditions
 from rocketflightsim.flight_simulation import simulate_flight, simulate_airbrakes_flight
 
+from test_configs import past_flights
 
 class TestFlightSimulation(unittest.TestCase):
     def test_flight_simulation(self):
             print("Testing flight simulation")
-            from test_configs import past_flights
 
             for flight in past_flights:
                 dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=flight.rocket, launch_conditions=flight.launch_conditions, timestep=0.001)

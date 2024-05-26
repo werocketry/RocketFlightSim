@@ -1,6 +1,8 @@
 # Define Motor, Rocket, LaunchConditions, and Airbrakes classes
 
 import numpy as np
+
+from . import constants as con
 from . import helper_functions as hfunc
 
 class Motor:
@@ -16,7 +18,7 @@ class Motor:
 
     If fuel_mass_curve is not provided but feul_mass is, fuel_mass_curve is calculated from the thrust_curve and fuel_mass (assuming fuel burn is proportional to thrust). If fuel_mass_curve is provided, fuel_mass is set to the initial mass in fuel_mass_curve. If neither are provided, fuel_mass and fuel_mass_curve are set to 0.
     """
-    # TODO: take eng files as inputs
+    
     def __init__(self, dry_mass, thrust_curve, fuel_mass_curve=None, fuel_mass=None):
         self.dry_mass = dry_mass
         self.thrust_curve = thrust_curve
@@ -43,26 +45,50 @@ class Motor:
 
 class Rocket:
     """
-    The Rocket class is used to store the properties of a rocket. The properties are:
+    The Rocket class is used to store the properties of a rocket.
 
-    - rocket_mass: dry mass of the rocket without the motor (kg)
-    - motor: Motor object
-    - A_rocket: cross-sectional area of the rocket (m^2). Must be the same used when the Cd_rocket_at_Ma was calculated.
-    - Cd_rocket_at_Ma: coefficient of drag of the rocket as a function of Mach number. Defaults to a constant 0.45, which is in the ballpark of what most comp rockets our size have.
-    - h_second_rail_button: height of the second rail button from the bottom of the rocket (m). This is the upper button if there's only 2. Defaults to 0.69m, which is what Prometheus had. Doesn't matter much if it's not set as it changes apogee by less than 10ft when it's at 0.
-
-    - dry_mass: total mass of the rocket without fuel (kg)
-    - Cd_A_rocket: coefficient of drag of the rocket multiplied by the cross-sectional area of the rocket (m^2)
+    Attributes
+    ----------
+    rocket_mass : float
+        Dry mass of the rocket without the motor (kg).
+    motor : Motor object
+        The rocket's motor.
+    A_rocket : float
+        Cross-sectional area of the rocket (m^2) used when Cd_rocket_at_Ma was calculated.
+    Cd_rocket_at_Ma : float or function
+        Coefficient of drag of the rocket. May be given as a function of Mach number or as a constant.
+    h_second_rail_button : float
+        Height of the second rail button from the bottom of the rocket (m). This is the upper button if there are only 2.
+    dry_mass : float
+        Total mass of the rocket without fuel (kg).
+    Cd_A_rocket : function
+        Coefficient of drag of the rocket multiplied by the cross-sectional area of the rocket (m^2).
     """
 
     def __init__(
         self,
-        rocket_mass,
-        motor,
-        A_rocket,
+        rocket_mass : float,
+        motor : Motor,
+        A_rocket : float,
         Cd_rocket_at_Ma = 0.45,
-        h_second_rail_button=0.69,
+        h_second_rail_button : float = 0.69,
     ):
+        """Initializes the Rocket object.
+
+        Parameters
+        ----------
+        rocket_mass : float
+            Dry mass of the rocket without the motor (kg).
+        motor : Motor object
+            The rocket's motor.
+        A_rocket : float
+            Cross-sectional area of the rocket (m^2). Must be the same used when the Cd_rocket_at_Ma was calculated.
+        Cd_rocket_at_Ma : float or function, optional
+            Coefficient of drag of the rocket. May be given as a function of Mach number or as a constant. Defaults to a constant 0.45, which is in the ballpark of what most student team competition rockets our size have.
+        h_second_rail_button : float, optional
+            Height of the second rail button from the bottom of the rocket (m). This is the upper button if there are only 2. Defaults to 0.7m, which is reasonable for most student team competition rockets. Doesn't matter much if it's not set as it changes apogee by less than 10ft on a 10k ft launch when set to 0.
+        """
+
         self.rocket_mass = rocket_mass
         self.motor = motor
         self.A_rocket = A_rocket
@@ -81,22 +107,58 @@ class Rocket:
 
 
 class LaunchConditions:
-    """
-    The LaunchConditions class is used to store the properties of the launch conditions. The properties are:
+    """The LaunchConditions class is used to store the properties of the launch conditions. 
 
-    - launchpad_pressure: pressure at the launchpad (Pa)
-    - launchpad_temp: temperature at the launchpad (°C)
-    - L_launch_rail: length of the launch rail (m)
-    - launch_angle: launch angle from horizontal (deg). SAC comp rules say minimum of 6 deg off of vertical, but they pick it based on wind and pad location, so completely out of our control, and we just know it's between 6 and 15 deg
-    - local_gravity: acceleration due to gravity at the launch site (m/s^2). Defaults to 9.80665
-    - local_T_lapse_rate: temperature lapse rate at the launch site (°C/m, K/m). Defaults to -0.0065
-    - latitude: latitude of the launch site (deg). Used to calculate local gravity if local_gravity is not provided. If neither are provided, local gravity defaults to 9.807
-    - altitude: altitude of the launch site (m ASL). Defaults to 0
+    Attributes
+    ----------
+    launchpad_pressure : float
+        Pressure at the launchpad (Pa).
+    launchpad_temp : float
+        Temperature at the launchpad (°C).
+    L_launch_rail : float
+        Length of the launch rail (m).
+    launch_angle : float
+        Launch angle from horizontal (deg).
+    local_gravity : float
+        Acceleration due to gravity at the launch site (m/s^2).
+    local_T_lapse_rate : float
+        Temperature lapse rate at the launch site (°C/m, K/m).
     """
 
-    def __init__(self, launchpad_pressure, launchpad_temp, L_launch_rail, launch_angle, local_gravity=None, local_T_lapse_rate=None, latitude=None, altitude=0):
+    def __init__(
+        self, 
+        launchpad_pressure: float,
+        launchpad_temp: float,
+        L_launch_rail: float,
+        launch_angle: float,
+        local_gravity: float = None,
+        local_T_lapse_rate: float = con.T_lapse_rate,
+        latitude: float = None,
+        altitude: float = 0,
+    ):
+        """Initializes the LaunchConditions object. 
+        
+        Parameters
+        ----------
+        launchpad_pressure : float
+            Pressure at the launchpad (Pa).
+        launchpad_temp : float
+            Temperature at the launchpad (°C).
+        L_launch_rail : float
+            Length of the launch rail (m).
+        launch_angle : float
+            Launch angle from horizontal (deg).
+        local_gravity : float, optional
+            Acceleration due to gravity at the launch site (m/s^2). Defaults to 9.80665.
+        local_T_lapse_rate : float, optional
+            Temperature lapse rate at the launch site (°C/m, K/m). Defaults to -0.0065.
+        latitude : float, optional
+            Latitude of the launch site (deg). Used along with altitude to calculate local gravity if local_gravity is not provided. If neither local_gravity nor latitude are provided, local gravity defaults to 9.80665. Defaults to None.
+        altitude : float, optional
+            Altitude of the launch site (m ASL). Used along with latitude to calculate local gravity if local_gravity is not provided. Defaults to 0.
+        """
         self.launchpad_pressure = launchpad_pressure
-        self.launchpad_temp = launchpad_temp # TODO: maybe make it convert to Kelvin here
+        self.launchpad_temp = launchpad_temp + 273.15
         self.L_launch_rail = L_launch_rail
         self.launch_angle = launch_angle
 
@@ -107,23 +169,50 @@ class LaunchConditions:
         elif latitude:
             self.local_gravity = hfunc.get_local_gravity(latitude, altitude)
         else:
-            self.local_gravity = None
+            self.local_gravity = con.F_gravity
         
 
 class Airbrakes:
     """
-    The Airbrakes class is used to store the properties of the airbrakes. The properties are:
+    The Airbrakes class is used to store the properties of the airbrakes.
 
-    - num_flaps: number of airbrakes flaps
-    - A_flap: cross-sectional area of each flap (m^2)
-    - Cd_brakes: coefficient of drag of the airbrakes
-    - max_deployment_speed: maximum speed at which the airbrakes can be deployed (deg/s)
-    - max_deployment_angle: maximum angle that the flaps can deploy to (deg)
+    Attributes
+    ----------
+    num_flaps : int
+        Number of airbrake flaps.
+    A_flap : float
+        Cross-sectional area of each flap (m^2).
+    Cd_brakes : float
+        Coefficient of drag of the airbrakes.
+    max_deployment_speed : float
+        Maximum speed at which the airbrakes can be deployed (deg/s).
+    max_deployment_angle : float
+        Maximum angle that the flaps can deploy to (deg).
     """
 
     def __init__(
-        self, num_flaps, A_flap, Cd_brakes, max_deployment_speed, max_deployment_angle
+        self, 
+        num_flaps : int,
+        A_flap : float,
+        Cd_brakes : float,
+        max_deployment_speed : float,
+        max_deployment_angle : float,
     ):
+        """Initializes the Airbrakes object.
+
+        Parameters
+        ----------
+        num_flaps : int
+            Number of airbrake flaps.
+        A_flap : float
+            Cross-sectional area of each flap (m^2).
+        Cd_brakes : float
+            Coefficient of drag of the airbrakes.
+        max_deployment_speed : float
+            Maximum speed at which the airbrakes can be deployed (deg/s).
+        max_deployment_angle : float
+            Maximum angle that the flaps can deploy to (deg).
+        """
         self.num_flaps = num_flaps
         self.A_flap = A_flap
         self.Cd_brakes = Cd_brakes

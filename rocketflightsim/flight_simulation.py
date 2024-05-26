@@ -39,19 +39,12 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
 
     # Extract launch condition parameters
     launchpad_pressure = launch_conditions.launchpad_pressure
-    launchpad_temp = launch_conditions.launchpad_temp + 273.15
+    launchpad_temp = launch_conditions.launchpad_temp
     L_launch_rail = launch_conditions.L_launch_rail
     launch_angle = launch_conditions.launch_angle
     
-    if launch_conditions.local_T_lapse_rate:
-        T_lapse_rate = launch_conditions.local_T_lapse_rate
-    else:
-        T_lapse_rate = con.T_lapse_rate
-    
-    if launch_conditions.local_gravity:
-        F_gravity = launch_conditions.local_gravity
-    else:
-        F_gravity = con.F_gravity
+    T_lapse_rate = launch_conditions.local_T_lapse_rate
+    F_gravity = launch_conditions.local_gravity
 
     # Initialize simulation variables
     time, height, speed, a_y, a_x, v_y, v_x, Cd_A_rocket, Ma, q = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -304,16 +297,9 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbr
     # Extract launch condition parameters
     launchpad_temp = pre_brake_flight.temperature.iloc[0]
     launchpad_pressure = pre_brake_flight.air_density.iloc[0] * con.R_specific_air * launchpad_temp
-
-    if launch_conditions.local_T_lapse_rate:
-        T_lapse_rate = launch_conditions.local_T_lapse_rate
-    else:
-        T_lapse_rate = con.T_lapse_rate
     
-    if launch_conditions.local_gravity:
-        F_gravity = launch_conditions.local_gravity
-    else:
-        F_gravity = con.F_gravity
+    T_lapse_rate = launch_conditions.local_T_lapse_rate    
+    F_gravity = launch_conditions.local_gravity
 
     # Calculate constants to be used in air density function
     multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, - F_gravity / (con.R_specific_air * T_lapse_rate)))

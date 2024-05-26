@@ -15,34 +15,7 @@ def temp_at_height(h, launchpad_temp, lapse_rate = con.T_lapse_rate):
     - float: Temperature at the given height in Celsius or Kelvin (same as input).
     """
     return launchpad_temp + (h * lapse_rate)
-def pressure_at_height(h, launchpad_temp, launchpad_pressure):
-    """
-    Calculate the air pressure at a given height above the launchpad.
 
-    Args:
-    - h (float): Height above the launchpad in meters.
-    - launchpad_temp (float): Temperature at the launchpad in Kelvin.
-    - launchpad_pressure (float): Air pressure at the launchpad in Pascals.
-
-    Returns:
-    - float: Air pressure at the given height in Pascals.
-    """
-    return launchpad_pressure * pow(
-        (1 - (h * con.T_lapse_rate / launchpad_temp)),
-        (con.F_gravity / (con.R_specific_air * con.T_lapse_rate))
-    )
-def air_density_fn(pressure, temp):
-    """
-    Calculate the density of air at a given pressure and temperature.
-
-    Args:
-    - pressure (float): Pressure in Pascals.
-    - temp (float): Temperature in Kelvin.
-
-    Returns:
-    - float: Air density in kilograms per cubic meter.
-    """
-    return pressure / (con.R_specific_air * temp)
 def air_density_optimized(temp, multiplier, exponent):
     """
     Calculate the density of air at a given height above the launchpad.
@@ -122,7 +95,37 @@ def get_local_gravity(latitude, h = 0, h_expected = None):
     else:
         return g_launchpad
 
-# not used anymore
+# not used in simulator
+def pressure_at_height(h, launchpad_temp, launchpad_pressure):
+    """
+    Calculate the air pressure at a given height above the launchpad.
+
+    Args:
+    - h (float): Height above the launchpad in meters.
+    - launchpad_temp (float): Temperature at the launchpad in Kelvin.
+    - launchpad_pressure (float): Air pressure at the launchpad in Pascals.
+
+    Returns:
+    - float: Air pressure at the given height in Pascals.
+    """ # note, could use a specific sim's local gravity and lapse rate to be more accurate
+    return launchpad_pressure * pow(
+        (1 - (h * con.T_lapse_rate / launchpad_temp)),
+        (con.F_gravity / (con.R_specific_air * con.T_lapse_rate))
+    )
+
+def air_density_fn(pressure, temp):
+    """
+    Calculate the density of air at a given pressure and temperature.
+
+    Args:
+    - pressure (float): Pressure in Pascals.
+    - temp (float): Temperature in Kelvin.
+
+    Returns:
+    - float: Air density in kilograms per cubic meter.
+    """
+    return pressure / (con.R_specific_air * temp)
+
 def lookup_dynamic_viscosity(temp):
     """
     Look up the dynamic viscosity of air at a given temperature.
@@ -143,6 +146,7 @@ def lookup_dynamic_viscosity(temp):
     # Interpolate
     viscosity = np.interp(temp, temps, viscosities)
     return viscosity
+
 def calculate_reynolds_number(air_density, speed, len_characteristic, dynamic_viscosity):
     """
     Calculate the Reynolds number of a solid moving through air.

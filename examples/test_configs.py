@@ -946,7 +946,7 @@ default_airbrakes_model = Airbrakes(
 )
 
 # LaunchConditions class configurations
-local_T_lapse_rate_SA = -0.00817  # K/m
+T_lapse_rate_SA = -0.00817  # K/m
 """ How T_lapse_rate at Spaceport America was determined
 
 Only one source was found with the lapse rate for Spaceport America:
@@ -977,7 +977,7 @@ The following was the most comprehensive source found for temperature lapse rate
 """
 L_launch_rail_ESRA_provided_SAC = 5.18  # m, 
 """ ESRA provides teams with a 5.18m rail at competition """
-launchpad_pressure_SA = 86400  # Pa
+launchpad_pressure_SAC = 86400  # Pa
 """ How the launchpad pressure at Spaceport America was determined
 
 - 86400 2022/06/24   WE Rocketry 2022 TeleMega/TeleMetrum data
@@ -986,22 +986,33 @@ launchpad_pressure_SA = 86400  # Pa
 - Truth or Consequences, NM, USA, which has an elevation 90 m lower than Spaceport America
     - 84780 http://cms.ashrae.biz/weatherdata/STATIONS/722710_s.pdf
 """
-launchpad_temp_Prometheus = 34  # deg C
-    # TODO: find average temp at SA on launch days at launch times
-""" From https://www.timeanddate.com/weather/@5492576/historic?month=6&year=2023 """
+launchpad_temp_SAC = 35  # deg C
+""" Ground-level temperature at Spaceport America Cup note
+
+Flights can occur between about 07:00 and 16:30 local time, so the temperature at the time of launch can vary significantly. 35 C is about what it has been historically during the competition in mid-late June. Getting closer to launch day, it would be more accurate to use a weather forecast to get a value for expected temperature(s).
+
+You can also consider running simulations with a range of temperatures that have been seen on launch days in the past (normally between 25 and 45 C) to see how different ground-level temperatures could affect a rocket's flight.
+"""
 latitude_SA = 32.99  # deg, Spaceport America's latitude
 """ https://maps.app.goo.gl/rZT6MRLqHneA7wNX7 """
 altitude_SA = 1401  # m, Spaceport America's elevation
 """ https://www.spaceportamerica.com/faq/#toggle-id-15"""
 launch_angle_SAC = 84  # deg from horizontal
-""" Per DTEG 10.1.1 """ # TODO: talk more about determination of launch rail angle at comp here
+"""DTEG 10.1.1: 
+    > Launch vehicles will nominally launch at an elevation angle of 84° ±1°
+DTEG 10.1.2:
+    > Range Safety Officers reserve the right to require certain vehicles’ launch elevation be 
+lower or higher if flight safety issues are identified during pre-launch activities
+
+Teams have noted that they've been told to use angles at least as low as 80°. The Range Safety Officer picks the angle based on various factors, including the rocket being launched, the weather, and the location of the launch pad. In the design, simulation, and testing phases, use the nominal angle of 84°, but consider the possibility of the launch angle being more or less than that on competition day.
+"""
 
 Spaceport_America_avg_launch_conditions = LaunchConditions(
-    launchpad_pressure = launchpad_pressure_SA,
-    launchpad_temp = launchpad_temp_Prometheus,
+    launchpad_pressure = launchpad_pressure_SAC,
+    launchpad_temp = launchpad_temp_SAC,
     L_launch_rail = L_launch_rail_ESRA_provided_SAC,
     launch_angle = launch_angle_SAC,
-    local_T_lapse_rate = local_T_lapse_rate_SA,
+    local_T_lapse_rate = T_lapse_rate_SA,
     latitude = latitude_SA,
     altitude = altitude_SA
 )

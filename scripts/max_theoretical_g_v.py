@@ -13,10 +13,9 @@ def max_theoretical_thrust(rocket, launch_conditions=None):
     Returns:
         float: The maximum theoretical g-force on the rocket
     """
-    if launch_conditions and launch_conditions.local_gravity:
+    if launch_conditions:
         F_gravity = launch_conditions.local_gravity
-    else:
-        F_gravity = con.F_gravity
+
     max_thrust = max(rocket.motor.thrust_curve.values())
     time_of_max_thrust = max(rocket.motor.thrust_curve, key=rocket.motor.thrust_curve.get)
     mass_at_max_thrust = hfunc.mass_at_time(time_of_max_thrust, rocket.dry_mass, rocket.motor.fuel_mass_curve)
@@ -39,10 +38,9 @@ def max_theoretical_speed(rocket, launch_conditions=None):
     t = 0
     v = 0
     v_max = 0
-    if launch_conditions and launch_conditions.local_gravity:
+    if launch_conditions:
         F_gravity = launch_conditions.local_gravity
-    else:
-        F_gravity = con.F_gravity
+    
     while t < rocket.motor.burn_time:
         mass = hfunc.mass_at_time(t, rocket.dry_mass, rocket.motor.fuel_mass_curve)
         thrust = hfunc.thrust_at_time(t, rocket.motor.thrust_curve)
