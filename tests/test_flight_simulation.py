@@ -30,7 +30,8 @@ class TestAirbrakesFlightSimulation(unittest.TestCase):
      def test_airbrakes_flight_simulation(self):
             print("\n--------------------")
             print("Testing airbrakes flight simulation")
-            from test_configs import Juno3_rocket, Juno3_launch_conditions, default_airbrakes_model
+            from test_configs import Juno3_rocket, Juno3_launch_conditions
+            from example_configurations import default_airbrakes_model
     
             dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditions, timestep=0.001)
             print(f"Burnout: \n\tHeight: {dataset['height'].iloc[burnout_index - 1]} m\n\tSpeed: {dataset['speed'].iloc[burnout_index - 1]} m/s\n\tTime: {dataset['time'].iloc[burnout_index - 1]} s\n")
