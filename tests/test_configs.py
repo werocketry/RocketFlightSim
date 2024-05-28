@@ -922,7 +922,7 @@ This is the flight that the sim is furthest off from predicting well. Possible r
     - various small effects not accounted for in the sim made more significant
     - can't put the energy into wording it right now, but intuition
     - try simulating from burnout to apogee to see if the sim is more accurate there
-    - would wind have a larger effect?
+    - wind would have a larger effect
 - not confident in the values the notebook provides for the motor:
     - adding on the motor mass from thrustcurve.org, the sim gives an error of -14.76, instead of +24.63
         - also lended some credence due to the sim also underestimating the other 3 flights
@@ -932,7 +932,7 @@ This is the flight that the sim is furthest off from predicting well. Possible r
 - using a constant Cd may not be a great approximation for a rocket hitting about Mach 0.25 
     - also, no mention of where the Cd value comes from. If it's ork or RasAero, it's likely not accurate. If it was CFD, they likely would have given a curve
 - no local variation in lapse rate from the standard lapse rate accounted for. Based on how it affects a 10k launch, it can improve the accuracy by about 0.3%, which might be another small factor
-Could diagnose more by comparing plots of data from the flight computer to plots from the sim, but a bit busy atm
+Could diagnose more by comparing plots of data from the flight computer to plots from the sim
 """
 
 past_flights = [NDRT_2020_flight, Valetudo_flight, Juno3_flight, Bella_Lui_flight]

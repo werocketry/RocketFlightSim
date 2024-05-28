@@ -73,11 +73,16 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
         ]
     ]
 
+    # Calculate trigonometric ratios on the launch rail
+    cos_angle_to_vertical_launch_rail = np.cos(angle_to_vertical)
+    sin_angle_to_vertical_launch_rail = np.sin(angle_to_vertical)
+
     # Simulate motor burn until liftoff
+    takeoff_thrust = F_gravity * cos_angle_to_vertical_launch_rail
     while (
         hfunc.thrust_at_time(time, engine_thrust_lookup)
         / hfunc.mass_at_time(time, dry_mass, fuel_mass_lookup)
-        <= F_gravity
+        <= takeoff_thrust
     ):
         time += timestep
         # Append simulation values for each timestep
@@ -104,7 +109,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     # Liftoff until launch rail cleared
     time += timestep
     effective_L_launch_rail = L_launch_rail - rocket.h_second_rail_button
-    effective_h_launch_rail = effective_L_launch_rail * np.cos(angle_to_vertical)
+    effective_h_launch_rail = effective_L_launch_rail * cos_angle_to_vertical_launch_rail
 
     # Simulate flight from liftoff until the launch rail is cleared
     while height < effective_h_launch_rail:
@@ -121,8 +126,8 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
         # Update rocket's motion parameters
         mass = hfunc.mass_at_time(time, dry_mass, fuel_mass_lookup)
         thrust = hfunc.thrust_at_time(time, engine_thrust_lookup)
-        a_y = (thrust - F_drag) * np.cos(angle_to_vertical) / mass - F_gravity
-        a_x = (thrust - F_drag) * np.sin(angle_to_vertical) / mass
+        a_y = (thrust - F_drag) * cos_angle_to_vertical_launch_rail / mass - F_gravity
+        a_x = (thrust - F_drag) * sin_angle_to_vertical_launch_rail / mass
         v_y += a_y * timestep
         v_x += a_x * timestep
         speed = np.sqrt(v_y**2 + v_x**2)

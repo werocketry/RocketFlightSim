@@ -138,8 +138,7 @@ launch_angle_SAC = 84  # deg from horizontal
 DTEG 10.1.1: 
     > Launch vehicles will nominally launch at an elevation angle of 84° ±1°
 DTEG 10.1.2:
-    > Range Safety Officers reserve the right to require certain vehicles’ launch elevation be 
-lower or higher if flight safety issues are identified during pre-launch activities
+    > Range Safety Officers reserve the right to require certain vehicles’ launch elevation be lower or higher if flight safety issues are identified during pre-launch activities
 
 Teams have noted that they've been told to use angles at least as low as 80°. The Range Safety Officer picks the angle based on various factors, including the rocket being launched, the weather, and the location of the launch pad. In the design, simulation, and testing phases, use the nominal angle of 84°, but consider the possibility of the launch angle being more or less than that on competition day.
 """
