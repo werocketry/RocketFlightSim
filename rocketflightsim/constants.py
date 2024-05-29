@@ -1,8 +1,10 @@
 # constants 
-R_universal = 8.3144598  # J/(mol*K)
-MM_air = 0.0289644  # kg/mol
+R_universal = 8.3144598  # universal gas constant, J/(mol*K)
+MM_air = 0.0289644  # molar mass of air, kg/mol
 adiabatic_index_air = 1.4  # unitless
-"""Notes on adiabatic index (also known as the heat capacity ratio (cp/cv)) for air
+"""Notes on adiabatic index (also known as the heat capacity ratio or ratio of specific heats (cp/cv)) for air
+
+As per https://www.grc.nasa.gov/WWW/BGH/realspec.html, air is calorically perfect up to low supersonic Mach numbers, so the adiabatic index doesn't change with airspeed over the speeds that most hobbyist or collegiate team rockets will experience. 
 
 As a function of teperature, for dry air, the adiabatic index according to different sources is:
     https://en.wikipedia.org/wiki/Heat_capacity_ratio
@@ -17,10 +19,8 @@ As a function of teperature, for dry air, the adiabatic index according to diffe
         - 1.403 at 0°C
         - 1.400 at 20°C
         - 1.401 at 100°C
-        
-The value of 1.4 is a very good approximation for the temperature range the rocket will experience
 
-As per https://www.grc.nasa.gov/WWW/BGH/realspec.html, air is calorically perfect up to low supersonic Mach numbers, so the adiabatic index doesn't change with airspeed over the speeds that the rocket will experience
+The value of 1.4 is a very good approximation for the temperature ranges that most hobbyist or collegiate team rockets will experience.
 """
 
 # derived constants
