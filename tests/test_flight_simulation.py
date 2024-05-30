@@ -50,6 +50,8 @@ plt.ylabel("Apogee (ft)")
 plt.title("Apogee vs Timestep")
 plt.show()"""
 
+# add a test to verify that the simulation doesn't take too long to run
+
 class TestAirbrakesFlightSimulation(unittest.TestCase):
      def test_airbrakes_flight_simulation(self):
             print("\n--------------------")
