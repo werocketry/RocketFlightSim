@@ -1,3 +1,5 @@
+# TODO: do a major refresh of these (consider deleting them?)
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
