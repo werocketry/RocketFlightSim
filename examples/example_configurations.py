@@ -158,8 +158,8 @@ default_airbrakes_model = Airbrakes(
     num_flaps = 3,
     A_flap = 0.004,  # m^2  flap area
     Cd_brakes = 1,
-    max_deployment_speed = 5,  # deg/s
-    max_deployment_angle = 45  # deg
+    max_deployment_angle = 45,  # deg
+    max_deployment_rate = 5,  # deg/s
 )
 
 if __name__ == "__main__":

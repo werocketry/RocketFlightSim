@@ -16,6 +16,8 @@ The default for OpenRocket sims is 0.01s for the first while, and then somewhere
 
 A timestep of 0.02s gives apogees a few feet different for a 10k launch compared to using 0.001s. 0.001s can still be used for one-off sims, but when running many sims, 0.02s is better.
 """
+
+# TODO consider splitting simulator into stages. Could be better for readability, but also for allowing more complex simulations with multiple stages, and going beyond the troposphere with different lapse rates, a different gravity model, and a different wind model. Could even use it for educational purposes like showing the importance of having a launch rail
 # Flight simulation function
 def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     """
@@ -312,7 +314,7 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbr
 
     # Extract airbrakes parameters
     Cd_brakes = airbrakes.Cd_brakes
-    max_deployment_speed = np.deg2rad(airbrakes.max_deployment_speed)
+    max_deployment_rate = np.deg2rad(airbrakes.max_deployment_rate)
     max_deployment_angle = np.deg2rad(airbrakes.max_deployment_angle)
     A_brakes = airbrakes.num_flaps * airbrakes.A_flap
 
@@ -342,7 +344,7 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbr
         Cd_A_rocket = Cd_A_rocket_fn(Ma)
         q = hfunc.calculate_dynamic_pressure(air_density, speed)
 
-        deployment_angle = min(max_deployment_angle, deployment_angle + max_deployment_speed * timestep)
+        deployment_angle = min(max_deployment_angle, deployment_angle + max_deployment_rate * timestep)
 
         if deployment_angle >= max_deployment_angle and not time_recorded:
             time_of_max_deployment = time
@@ -404,22 +406,3 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbr
 
     return ascent, time_of_max_deployment
 
-
-# TODO: move this to a test file
-    # run a couple hundred different timesteps in logspace between 0.001 and 0.1 to see how it changes to help pick a good timestep
-    
-"""    apogees = []
-    for timestep in np.logspace(-3, -1, 200):
-        dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=Juno3_rocket, timestep=timestep)
-        ascent, time_of_max_deployment = simulate_airbrakes_flight(dataset.iloc[:burnout_index].copy(), rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditions, timestep=0.001)
-        apogees.append(ascent["height"].iloc[-1]*3.28084)
-        print(len(apogees))
-    # plot them
-    import matplotlib.pyplot as plt
-    plt.plot(np.logspace(-3, -1, 200), apogees)
-    plt.xscale("log")
-    plt.xlabel("Timestep (s)")
-    plt.ylabel("Apogee (ft)")
-    plt.title("Apogee vs Timestep")
-    plt.show()"""
-    
