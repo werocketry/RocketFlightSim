@@ -1,4 +1,4 @@
-# Import libraries, define natural constants, helper functions
+# Import libraries
 import sys
 import os
 
@@ -9,12 +9,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from . import helper_functions as hfunc
 from . import constants as con
 
+# Default timestep for the simulation
 default_timestep = 0.02
 """ Notes on timesteps:
 
 The default for OpenRocket sims is 0.01s for the first while, and then somewhere between 0.02 and 0.05 for a while, and then 0.05 for most of the rest of the ascent. It simulates more complicated dynamics than we do
 
-A timestep of 0.02s gives apogees a few feet different for a 10k launch compared to using 0.001s. 0.001s can still be used for one-off sims, but when running many sims, 0.02s is better.
+A timestep of 0.02s gives apogees a difference of a few feet for a 10k launch compared to using 0.001s. 0.001s can still be used for one-off sims, but when running many sims, 0.02s is better.
 """
 
 # TODO consider splitting simulator into stages. Could be better for readability, but also for allowing more complex simulations with multiple stages, and going beyond the troposphere with different lapse rates, a different gravity model, and a different wind model. Could even use it for educational purposes like showing the importance of having a launch rail
@@ -26,7 +27,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     Args:
     - rocket (Rocket): An instance of the Rocket class.
     - launch_conditions (LaunchConditions): An instance of the LaunchConditions class.
-    - timestep (float): The time increment for the simulation in seconds.
+    - timestep (float, optional): The time increment for the simulation in seconds.
 
     Returns:
     - tuple: A tuple containing the dataset of simulation results and indices of key flight events.
@@ -49,8 +50,9 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     F_gravity = launch_conditions.local_gravity
 
     # Initialize simulation variables
-    time, height, speed, a_y, a_x, v_y, v_x, Cd_A_rocket, Ma, q = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    time, height, speed, a_y, a_x, v_y, v_x, Ma, q = 0, 0, 0, 0, 0, 0, 0, 0, 0
     angle_to_vertical = np.deg2rad(90 - launch_angle)
+
     # Calculate constants to be used in air density function, set initial air density
     multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, - F_gravity / (con.R_specific_air * T_lapse_rate)))
     exponent = - F_gravity / (con.R_specific_air * T_lapse_rate) - 1
@@ -70,17 +72,16 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
             air_density,
             q,
             Ma,
-            Cd_A_rocket, # why is this being saved?
             angle_to_vertical,
         ]
     ]
 
     # Calculate trigonometric ratios on the launch rail
-    cos_angle_to_vertical_launch_rail = np.cos(angle_to_vertical)
-    sin_angle_to_vertical_launch_rail = np.sin(angle_to_vertical)
+    cos_rail_angle_to_vertical = np.cos(angle_to_vertical)
+    sin_rail_angle_to_vertical = np.sin(angle_to_vertical)
 
     # Simulate motor burn until liftoff
-    takeoff_thrust = F_gravity * cos_angle_to_vertical_launch_rail
+    takeoff_thrust = F_gravity * cos_rail_angle_to_vertical
     while (
         hfunc.thrust_at_time(time, engine_thrust_lookup)
         / hfunc.mass_at_time(time, dry_mass, fuel_mass_lookup)
@@ -101,7 +102,6 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
                 air_density,
                 q, # 0
                 Ma, # 0
-                Cd_A_rocket, # 0
                 angle_to_vertical,
             ]
         )
@@ -111,7 +111,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     # Liftoff until launch rail cleared
     time += timestep
     effective_L_launch_rail = L_launch_rail - rocket.h_second_rail_button
-    effective_h_launch_rail = effective_L_launch_rail * cos_angle_to_vertical_launch_rail
+    effective_h_launch_rail = effective_L_launch_rail * cos_rail_angle_to_vertical
 
     # Simulate flight from liftoff until the launch rail is cleared
     while height < effective_h_launch_rail:
@@ -128,8 +128,9 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
         # Update rocket's motion parameters
         mass = hfunc.mass_at_time(time, dry_mass, fuel_mass_lookup)
         thrust = hfunc.thrust_at_time(time, engine_thrust_lookup)
-        a_y = (thrust - F_drag) * cos_angle_to_vertical_launch_rail / mass - F_gravity
-        a_x = (thrust - F_drag) * sin_angle_to_vertical_launch_rail / mass
+        a_rail = (thrust - F_drag) / mass - F_gravity * cos_rail_angle_to_vertical
+        a_y = a_rail * cos_rail_angle_to_vertical
+        a_x = a_rail * sin_rail_angle_to_vertical
         v_y += a_y * timestep
         v_x += a_x * timestep
         speed = np.sqrt(v_y**2 + v_x**2)
@@ -149,7 +150,6 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
                 air_density,
                 q,
                 Ma,
-                Cd_A_rocket,
                 angle_to_vertical,
             ]
         )
@@ -196,7 +196,6 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
                 air_density,
                 q,
                 Ma,
-                Cd_A_rocket,
                 angle_to_vertical,
             ]
         )
@@ -243,34 +242,33 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
                 air_density,
                 q,
                 Ma,
-                Cd_A_rocket,
                 angle_to_vertical,
             ]
         )
 
         time += timestep
 
-    # Mark the index at apogee (highest point)
+    # Mark the index at apogee
     apogee_index = len(simulated_values)
-    simulated_values[-1][12] = simulated_values[-2][12]
+    simulated_values[-1][11] = simulated_values[-2][11]
 
     # Convert the list of simulation values to a DataFrame for easier analysis and visualization
     dataset = pd.DataFrame(
-        {
-            "time": [row[0] for row in simulated_values],
-            "height": [row[1] for row in simulated_values],
-            "speed": [row[2] for row in simulated_values],
-            "a_y": [row[3] for row in simulated_values],
-            "a_x": [row[4] for row in simulated_values],
-            "v_y": [row[5] for row in simulated_values],
-            "v_x": [row[6] for row in simulated_values],
-            "temperature": [row[7] for row in simulated_values],
-            "air_density": [row[8] for row in simulated_values],
-            "q": [row[9] for row in simulated_values],
-            "Ma": [row[10] for row in simulated_values],
-            "Cd_A_rocket": [row[11] for row in simulated_values],
-            "angle_to_vertical": [row[12] for row in simulated_values],
-        }
+        simulated_values,
+        columns=[
+            "time",
+            "height",
+            "speed",
+            "a_y",
+            "a_x",
+            "v_y",
+            "v_x",
+            "temperature",
+            "air_density",
+            "q",
+            "Ma",
+            "angle_to_vertical",
+        ],
     )
 
     return (
@@ -288,14 +286,14 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbr
     Simulate the flight of a rocket during its post-burnout ascent with airbrakes deployed until apogee, given its specifications and environmental conditions.
 
     Args:
-    - pre_brake_flight (DataFrame): A DataFrame containing the simulation results from the rocket's ascent until burnout. # TODO: change to a tuple of the dataset at the time to start the simulation
+    - pre_brake_flight (DataFrame): A DataFrame containing the simulation results from the rocket's ascent until burnout. # TODO: maybe change to a tuple of the dataset at the time to start the simulation?
     - rocket (Rocket): An instance of the Rocket class.
     - launch_conditions (LaunchConditions): An instance of the LaunchConditions class.
     - airbrakes (Airbrakes): An instance of the Airbrakes class.
-    - timestep (float): The time increment for the simulation in seconds.
+    - timestep (float, optional): The time increment for the simulation in seconds.
 
     Returns:
-    - tuple: A tuple containing the dataset of simulation results and the time at which the airbrakes are fully deployed.
+    - DataFrame: A DataFrame containing the simulation results from the rocket's post-burnout ascent with airbrakes deployed until apogee.
     """
     # Extract rocket parameters
     mass = rocket.dry_mass
@@ -329,7 +327,6 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbr
     angle_to_vertical = np.arctan(v_x / v_y)
 
     deployment_angle = 0
-    time_recorded = False
 
     # for efficiency, may be removed if/when the simulation is made more accurate by the cd of the brakes changing during the sim:
     A_Cd_brakes = A_brakes * Cd_brakes
@@ -345,11 +342,6 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbr
         q = hfunc.calculate_dynamic_pressure(air_density, speed)
 
         deployment_angle = min(max_deployment_angle, deployment_angle + max_deployment_rate * timestep)
-
-        if deployment_angle >= max_deployment_angle and not time_recorded:
-            time_of_max_deployment = time
-            time_recorded = True
-
 
         F_drag = q * (np.sin(deployment_angle) * A_Cd_brakes + Cd_A_rocket)
         a_y = -F_drag * np.cos(angle_to_vertical) / mass - F_gravity
@@ -374,35 +366,31 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbr
                 air_density,
                 q,
                 Ma,
-                Cd_A_rocket,
                 angle_to_vertical,
                 deployment_angle,
             ]
         )
 
-    simulated_values[-1][12] = simulated_values[-2][12]
+    simulated_values[-1][11] = simulated_values[-2][11]
 
-    data = {
-        "time": [row[0] for row in simulated_values],
-        "height": [row[1] for row in simulated_values],
-        "speed": [row[2] for row in simulated_values],
-        "a_y": [row[3] for row in simulated_values],
-        "a_x": [row[4] for row in simulated_values],
-        "v_y": [row[5] for row in simulated_values],
-        "v_x": [row[6] for row in simulated_values],
-        "temperature": [row[7] for row in simulated_values],
-        "air_density": [row[8] for row in simulated_values],
-        "q": [row[9] for row in simulated_values],
-        "Ma": [row[10] for row in simulated_values],
-        "Cd_A_rocket": [row[11] for row in simulated_values],
-        "angle_to_vertical": [row[12] for row in simulated_values],
-        "deployment_angle": [row[13] for row in simulated_values],
-    }
+    airbrakes_ascent = pd.DataFrame(
+        simulated_values,
+        columns=[
+            "time",
+            "height",
+            "speed",
+            "a_y",
+            "a_x",
+            "v_y",
+            "v_x",
+            "temperature",
+            "air_density",
+            "q",
+            "Ma",
+            "angle_to_vertical",
+            "deployment_angle",
+        ],
+    )
 
-    ascent = pd.concat([pre_brake_flight, pd.DataFrame(data)], ignore_index=True)
-
-    if not time_recorded:
-        time_of_max_deployment = time
-
-    return ascent, time_of_max_deployment
+    return airbrakes_ascent
 
