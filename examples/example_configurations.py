@@ -163,8 +163,8 @@ default_airbrakes_model = Airbrakes(
 )
 
 if __name__ == "__main__":
-    from rocketflightsim.flight_simulation import simulate_flight, simulate_airbrakes_flight
-    from rocketflightsim.plotting_functions import plot_ascent, plot_aerodynamics, plot_airbrakes_ascent
+    from rocketflightsim.flight_simulation import simulate_flight
+    from rocketflightsim.tools.plotting_functions import plot_ascent, plot_aerodynamics, plot_airbrakes_ascent
 
     dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket = example_rocket, launch_conditions = Spaceport_America_avg_launch_conditions, timestep = 0.001)
     print(f"Motor burnout: \n\tHeight: {dataset['height'].iloc[burnout_index - 1]} m\n\tSpeed: {dataset['speed'].iloc[burnout_index - 1]} m/s\n\tTime: {dataset['time'].iloc[burnout_index - 1]} s\n")

@@ -9,7 +9,7 @@ setup(
     author='Giorgio Chassikos, Western Engineering Rocketry Team',
     author_email='werocketry@gmail.com',
     url='https://github.com/werocketry/RocketFlightSim',
-    packages=find_packages(),
+    packages=find_packages(include=['rocketflightsim', 'rocketflightsim.*']),
     install_requires=[
         "numpy",
         "pandas",
