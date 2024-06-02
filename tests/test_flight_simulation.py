@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import unittest
 
 from rocketflightsim.rocket_classes import Motor, Rocket, LaunchConditions
-from rocketflightsim.flight_simulation import simulate_flight, simulate_airbrakes_flight
+from rocketflightsim.flight_simulation import simulate_flight, simulate_airbrakes_flight_max_deployment
 
 from .test_configs import past_flights
 from .test_configs import Juno3_rocket, Juno3_launch_conditions
@@ -31,6 +31,7 @@ class TestFlightSimulation(unittest.TestCase):
 class TestDefaultTimestep(unittest.TestCase):
      def test_default_timestep(self):
             print("Testing default timestep")
+            
             # TODO test to verify slight changes from the default timestep don't have a significant effect on the simulation results
 # from flight simulation file, used to pick the default timestep:
 
@@ -38,7 +39,7 @@ class TestDefaultTimestep(unittest.TestCase):
 """apogees = []
 for timestep in np.logspace(-3, -1, 200):
     dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=Juno3_rocket, timestep=timestep)
-    ascent, time_of_max_deployment = simulate_airbrakes_flight(dataset.iloc[:burnout_index].copy(), rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditions, timestep=0.001)
+    ascent, time_of_max_deployment = simulate_airbrakes_flight_max_deployment(dataset.iloc[:burnout_index].copy(), rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditions, timestep=0.001)
     apogees.append(ascent["height"].iloc[-1]*3.28084)
     print(len(apogees))
 # plot them
@@ -52,17 +53,18 @@ plt.show()"""
 
 # add a test to verify that the simulation doesn't take too long to run
 
-class TestAirbrakesFlightSimulation(unittest.TestCase):
-     def test_airbrakes_flight_simulation(self):
+class TestAirbrakesFlightSimulationMaxDeployment(unittest.TestCase):
+     def test_airbrakes_flight_max_deployment_simulation(self):
             print("\n--------------------")
             print("Testing airbrakes flight simulation")
             
             dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditions, timestep=0.001)
             print(f"Burnout: \n\tHeight: {dataset['height'].iloc[burnout_index - 1]} m\n\tSpeed: {dataset['speed'].iloc[burnout_index - 1]} m/s\n\tTime: {dataset['time'].iloc[burnout_index - 1]} s\n")
             print(f"No-airbraking apogee: \n\tHeight: {dataset['height'].iloc[apogee_index - 1]} m\n\tTime: {dataset['time'].iloc[apogee_index - 1]} s\n")
-            # TODO: make it take the actual flight data at burnout and sim from there
-            ascent = simulate_airbrakes_flight(dataset.iloc[:burnout_index].copy(), rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditions, airbrakes=default_airbrakes_model, timestep=0.001)
-            print(f"Airbrakes apogee: \n\tHeight: {ascent['height'].iloc[-1]} m\n\tTime: {ascent['time'].iloc[-1]} s\n\n")
+            # TODO: make it take the actual flight data at burnout and sim from 
+            
+            ascent = simulate_airbrakes_flight_max_deployment(dataset.iloc[:burnout_index].copy(), rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditions, airbrakes=default_airbrakes_model, timestep=0.001)
+            print(f"Max deployment airbrakes apogee: \n\tHeight: {ascent['height'].iloc[-1]} m\n\tTime: {ascent['time'].iloc[-1]} s\n\n")
             print("--------------------")
 
             assert ascent["height"].iloc[-1] > 1000

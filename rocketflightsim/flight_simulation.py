@@ -9,6 +9,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from . import helper_functions as hfunc
 from . import constants as con
 
+# TODO: see if Numba can speed up the simulation https://numba.pydata.org/
+
 # Default timestep for the simulation
 default_timestep = 0.02
 """ Notes on timesteps:
@@ -19,7 +21,7 @@ A timestep of 0.02s gives apogees a difference of a few feet for a 10k launch co
 """
 
 # TODO consider splitting simulator into stages. Could be better for readability, but also for allowing more complex simulations with multiple stages, and going beyond the troposphere with different lapse rates, a different gravity model, and a different wind model. Could even use it for educational purposes like showing the importance of having a launch rail
-# Flight simulation function
+# Flight simulation
 def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     """
     Simulate the flight of a rocket until its apogee given its specifications and launch conditions.
@@ -280,8 +282,8 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     )
 
 
-# Flight with airbrakes simulation function
-def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbrakes, timestep = default_timestep):
+# Flight simulation with airbrakes - max deployment
+def simulate_airbrakes_flight_max_deployment(pre_brake_flight, rocket, launch_conditions, airbrakes, timestep = default_timestep):
     """
     Simulate the flight of a rocket during its post-burnout ascent with airbrakes deployed until apogee, given its specifications and environmental conditions.
 
@@ -394,3 +396,110 @@ def simulate_airbrakes_flight(pre_brake_flight, rocket, launch_conditions, airbr
 
     return airbrakes_ascent
 
+# Flight simulation with airbrakes - deployed as a function of height
+def simulate_airbrakes_flight_deployment_function_of_height(initial_state_vector, rocket, launch_conditions, airbrakes, deployment_function, timestep = default_timestep):
+    """
+    Simulate the flight of a rocket during its post-burnout ascent with airbrakes deployed according to a supplied function of height.
+
+    Args:
+    - initial_state_vector (list): A list containing the initial state of the rocket at the start of the airbrakes simulation.
+    - rocket (Rocket): An instance of the Rocket class.
+    - launch_conditions (LaunchConditions): An instance of the LaunchConditions class.
+    - airbrakes (Airbrakes): An instance of the Airbrakes class.
+    - deployment_function (function): A function that takes the height of the rocket as an argument and returns the angle of the airbrakes deployment at that height.
+    - timestep (float, optional): The time increment for the simulation in seconds.
+
+    Returns:
+    - DataFrame: A DataFrame containing the simulation results from the rocket's post-burnout ascent with airbrakes deployed until apogee.
+    """
+    # Extract rocket parameters
+    mass = rocket.dry_mass
+    Cd_A_rocket_fn = rocket.Cd_A_rocket
+
+    # Extract launch condition parameters
+    launchpad_temp = launch_conditions.launchpad_temp
+    launchpad_pressure = launch_conditions.launchpad_pressure
+    
+    T_lapse_rate = launch_conditions.local_T_lapse_rate    
+    F_gravity = launch_conditions.local_gravity
+
+    # Calculate constants to be used in air density function
+    multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, - F_gravity / (con.R_specific_air * T_lapse_rate)))
+    exponent = - F_gravity / (con.R_specific_air * T_lapse_rate) - 1
+
+    # Extract airbrakes parameters
+    Cd_brakes = airbrakes.Cd_brakes
+    A_brakes = airbrakes.num_flaps * airbrakes.A_flap
+    A_Cd_brakes = A_brakes * Cd_brakes
+
+    # Initialize simulation variables
+    time = 0
+    height = initial_state_vector[0]
+    v_y = initial_state_vector[5]
+    v_x = v_y * 0.01
+    speed = np.sqrt(v_y**2 + v_x**2)
+    angle_to_vertical = np.arctan(v_x / v_y)
+    deployment_angle = 0
+
+    simulated_values = []
+    while v_y > 0:
+        time += timestep
+
+        temperature = hfunc.temp_at_height(height, launchpad_temp, lapse_rate = T_lapse_rate)
+        air_density = hfunc.air_density_optimized(temperature, multiplier,exponent)
+        Ma = hfunc.mach_number_fn(speed, temperature)
+        Cd_A_rocket = Cd_A_rocket_fn(Ma)
+        q = hfunc.calculate_dynamic_pressure(air_density, speed)
+
+        deployment_angle = deployment_function(height)
+
+        F_drag = q * (np.sin(deployment_angle) * A_Cd_brakes + Cd_A_rocket)
+        a_y = -F_drag * np.cos(angle_to_vertical) / mass - F_gravity
+        a_x = -F_drag * np.sin(angle_to_vertical) / mass
+        v_y += a_y * timestep
+        v_x += a_x * timestep
+        speed = np.sqrt(v_y**2 + v_x**2)
+        height += v_y * timestep
+
+        angle_to_vertical = np.arctan(v_x / v_y)
+
+        simulated_values.append(
+            [
+                time,
+                height,
+                speed,
+                a_y,
+                a_x,
+                v_y,
+                v_x,
+                temperature,
+                air_density,
+                q,
+                Ma,
+                angle_to_vertical,
+                deployment_angle,
+            ]
+        )
+
+    # simulated_values[-1][11] = simulated_values[-2][11]
+
+    airbrakes_ascent = pd.DataFrame(
+        simulated_values,
+        columns=[
+            "time",
+            "height",
+            "speed",
+            "a_y",
+            "a_x",
+            "v_y",
+            "v_x",
+            "temperature",
+            "air_density",
+            "q",
+            "Ma",
+            "angle_to_vertical",
+            "deployment_angle",
+        ],
+    )
+    
+    return airbrakes_ascent
