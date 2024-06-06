@@ -435,8 +435,8 @@ def simulate_airbrakes_flight_deployment_function_of_height(initial_state_vector
     # Initialize simulation variables
     time = 0
     height = initial_state_vector[0]
-    v_y = initial_state_vector[5]
-    v_x = v_y * 0.01
+    v_y = initial_state_vector[1]
+    v_x = initial_state_vector[2]
     speed = np.sqrt(v_y**2 + v_x**2)
     angle_to_vertical = np.arctan(v_x / v_y)
     deployment_angle = 0
