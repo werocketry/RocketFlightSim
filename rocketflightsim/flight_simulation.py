@@ -406,7 +406,7 @@ def simulate_airbrakes_flight_deployment_function_of_height(initial_state_vector
     - rocket (Rocket): An instance of the Rocket class.
     - launch_conditions (LaunchConditions): An instance of the LaunchConditions class.
     - airbrakes (Airbrakes): An instance of the Airbrakes class.
-    - deployment_function (function): A function that takes the height of the rocket as an argument and returns the angle of the airbrakes deployment at that height.
+    - deployment_function (function): A function that takes the height of the rocket as an argument and returns the angle of the airbrakes deployment at that height in radians.
     - timestep (float, optional): The time increment for the simulation in seconds.
 
     Returns:
