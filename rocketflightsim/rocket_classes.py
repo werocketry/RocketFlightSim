@@ -1,4 +1,4 @@
-# Define Motor, Rocket, LaunchConditions, and Airbrakes classes
+# Define classes used by the package
 
 import numpy as np
 
@@ -10,13 +10,13 @@ class Motor:
     The Motor class is used to store the properties of a rocket motor. The properties are:
 
     - dry_mass: mass of the motor without fuel (kg)
-    - thrust_curve: dictionary of thrust (N) at time (s after ignition)
+    - thrust_curve: dictionary of thrust (N) produced by the motor at time after ignition (s)
     - total_impulse: total impulse of the motor (Ns)
     - burn_time: time it takes for the motor to burn all of its fuel (s)
-    - fuel_mass_curve: dictionary of mass (kg) at time (s after ignition)
+    - fuel_mass_curve: dictionary of mass (kg) at time after ignition (s)
     - fuel_mass: total mass of fuel in the motor before ignition (kg)
 
-    If fuel_mass_curve is not provided but feul_mass is, fuel_mass_curve is calculated from the thrust_curve and fuel_mass (assuming fuel burn is proportional to thrust). If fuel_mass_curve is provided, fuel_mass is set to the initial mass in fuel_mass_curve. If neither are provided, fuel_mass and fuel_mass_curve are set to 0.
+    If fuel_mass_curve is not provided but fuel_mass is, fuel_mass_curve is calculated from the thrust_curve and fuel_mass (assuming fuel burn is proportional to thrust). If fuel_mass_curve is provided, fuel_mass is set to the initial mass in fuel_mass_curve. If neither are provided, fuel_mass and fuel_mass_curve are set to 0.
     """
     
     def __init__(
@@ -111,34 +111,33 @@ class Rocket:
             # TODO: make it actually operate as a constant if it's not a function
         self.Cd_A_rocket = Cd_A_rocket_fn
 
-""" TODO Adding wind to the simulation
+""" TODO Improve wind in the simulation
 
-For first implementation:
-- wind will only act in directions parallel to the ground
-- wind will have a constant speed and direction for the entire flight
-- wind will only affect the rocket's relative airspeed
-    - lateral forces will not be considered
-- wind will not affect flight from ignition to launch rail clearance
-- at launch rail clearance, the rocket will instantly have the wind's velocity added to its velocity vector (instantly weathercock the rocket, keeping the 0 angle of attack assumption used in the simulator)
+First (current) implementation:
+- wind only acts in directions parallel to the ground
+- wind has constant speed and direction for the entire flight
+- wind only affects a rocket's airspeed, affecting drag and angle of attack
+    - lateral forces not considered
+- wind has no effect on flight from ignition to launch rail clearance
+- at rail clearance, a rocket instantly has 20% of the wind's velocity added to its velocity vector to get the new airspeed, then the full vector added at burnout. Placeholder for a better mode of transition from the angle of attack leaving the launch rail to a 0 deg AoA
 
+Next up:
+    - Use this to get data for Spaceport America for the example configuration: https://www.dropbox.com/sh/swi7jrl14evqmap/AADW6GMVIv87KkOBY1-flsoIa?e=1
+        - Note that time is in UTC 
+        - Also use it to add to the Prometheus launch conditions in the airbrakes repo
+        - Remember that launches can't happen if wind > 20mph, so don't consider data with wind speeds above that when trying to find an average
+    - after comp, incorporate looking at/recording/visualizing flightpath moving in 3D/relative to the launchpad
 
-In the simulation, need to add the wind speed to the rocket's velocity vector and have that relative airspeed vector used to determine the drag force and the rocket's angle of attack (but not the rocket's displacement, which should still be calculated using the rocket's velocity vector).
-
-Use this to get data for Spaceport America for the example configuration: https://www.dropbox.com/sh/swi7jrl14evqmap/AADW6GMVIv87KkOBY1-flsoIa?e=1
-    Note that time is in UTC 
-    Also use it to add to the Prometheus launch conditions in the airbrakes repo
-    Remember that launches can't happen if wind > 20mph, so don't consider data with wind speeds above that when trying to find an average
-
-Is it worth describing the wind as None when not specified and having the simulator run faster by not having to add the wind speed to the velocity vector if it's None? 
-
-Could be added later:    
-Varying wind speed and direction with altitude or time, gusts, etc
-    - varying_wind_speed: list of tuples
-        - Each tuple contains the time (s after ignition) and the wind speed (m/s) at that time. Wind speed is relative to the ground.
-    - varying_wind_direction: list of tuples
-        - Each tuple contains the time (s after ignition) and the direction of the wind (deg). 0 is a headwind, 90 is a crosswind from the right, 180 is a tailwind, 270 is a crosswind from the left.
-    - wind_gusts: list of tuples
-        - Each tuple contains the time (s after ignition) and the wind speed (m/s) at that time. Wind speed is relative to the ground.
+Could be added later:
+    - possibly set windspeed as None when not specified and have the simulator run faster by not having to deal with wind. Likely after the break up of the simulation function into different functions for different phases of flight. Maybe a series of sim functions will be chosen from?
+    - Varying wind speed and direction with altitude or time, gusts, etc
+        - varying_wind_speed: list of tuples
+            - Each tuple contains the time (s after ignition) and the wind speed (m/s) at that time. Wind speed is relative to the ground.
+        - varying_wind_heading: list of tuples
+            - Each tuple contains the time (s after ignition) and the direction of the wind (deg). 0 is a headwind, 90 is a crosswind from the right, 180 is a tailwind, 270 is a crosswind from the left.
+        - wind_gusts: list of tuples
+            - Each tuple contains the time (s after ignition) and the wind speed (m/s) at that time. Wind speed is relative to the ground.
+        - vertical wind/updrafts/downdrafts
 """
 
 class LaunchConditions:
@@ -152,31 +151,33 @@ class LaunchConditions:
         Temperature at the launchpad (°C).
     L_launch_rail : float
         Length of the launch rail (m).
-    launch_angle : float
-        Launch angle from horizontal (deg).
+    launch_rail_elevation : float
+        Angle of the launch rail from horizontal (deg).
+    launch_driection : float
+        Direction of the launch rail (deg). 0 is north, 90 is east, 180 is south, 270 is west.
     local_gravity : float
         Acceleration due to gravity at the launch site (m/s^2).
     local_T_lapse_rate : float
         Temperature lapse rate at the launch site (°C/m, K/m).
     mean_wind_speed : float
         Mean wind speed relative to the ground (m/s).
-    wind_direction : float
-        Direction of the (mean) wind relative to the launch direction (deg). 0 is a headwind, 90 is a crosswind from the right, 180 is a tailwind, 270 is a crosswind from the left.
+    wind_heading : float
+        Direction the (mean) wind is headed towards (deg). 0 is north, 90 is east, 180 is south, 270 is west.
     """
-
+    # TODO: maybe have it calculate the atmospheric conditions on the ground in init?
     def __init__(
         self, 
         launchpad_pressure: float,
         launchpad_temp: float,
         L_launch_rail: float,
-        launch_angle: float = 90,
+        launch_rail_elevation: float = 90,
+        launch_rail_direction: float = 0,
         local_gravity: float = None,
         local_T_lapse_rate: float = con.T_lapse_rate,
         latitude: float = None,
         altitude: float = 0,
-        # better way to do wind, take a launch direction and a wind direction and calculate the angle between them, then could use the sim for looking at flightpath moving in 3D/relative to the launchpad, but still use the same computational power as just a relative wind direction
-        mean_wind_speed = None,
-        wind_direction = 0,
+        mean_wind_speed = 0,
+        wind_heading = 0,
     ):
         """Initializes the LaunchConditions object. 
         
@@ -188,8 +189,10 @@ class LaunchConditions:
             Temperature at the launchpad (°C).
         L_launch_rail : float
             Length of the launch rail (m).
-        launch_angle : float, optional
-            Launch angle from horizontal (deg). Defaults to 90 (vertical launch).
+        launch_rail_elevation : float
+            Angle of the launch rail from horizontal (deg). Defaults to 90 (vertical launch rail).
+        launch_driection : float
+            Direction of the launch rail (deg). 0 is north, 90 is east, 180 is south, 270 is west. Defaults to 0 (north).
         local_gravity : float, optional
             Acceleration due to gravity at the launch site (m/s^2). Defaults to 9.80665.
         local_T_lapse_rate : float, optional
@@ -199,14 +202,15 @@ class LaunchConditions:
         altitude : float, optional
             Altitude of the launch site (m ASL). Used along with latitude to calculate local gravity if local_gravity is not provided. Defaults to 0.
         mean_wind_speed : float, optional
-            Mean wind speed relative to the ground (m/s). Defaults to None.
-        wind_direction : float, optional
-            Direction of the (mean) wind relative to the launch direction (deg). 0 is a headwind, 90 is a crosswind from the right, 180 is a tailwind, 270 is a crosswind from the left. Defaults to 0 (headwind).
+            Mean wind speed relative to the ground (m/s). Defaults to 0.
+        wind_heading : float, optional
+            Direction the (mean) wind is headed towards (deg). 0 is north, 90 is east, 180 is south, 270 is west. Defaults to 0.
         """
         self.launchpad_pressure = launchpad_pressure
         self.launchpad_temp = launchpad_temp + 273.15
         self.L_launch_rail = L_launch_rail
-        self.launch_angle = launch_angle
+        self.launch_rail_elevation = launch_rail_elevation
+        self.launch_rail_direction = launch_rail_direction
 
         self.local_T_lapse_rate = local_T_lapse_rate
         
@@ -218,7 +222,7 @@ class LaunchConditions:
             self.local_gravity = con.F_gravity
         
         self.mean_wind_speed = mean_wind_speed
-        self.wind_direction = wind_direction        
+        self.wind_heading = wind_heading
 
 class Airbrakes:
     """
@@ -233,7 +237,7 @@ class Airbrakes:
     Cd_brakes : float
         Coefficient of drag of the airbrakes.
     max_deployment_angle : float
-        Maximum angle that the flaps can deploy to (deg).    
+        Maximum angle that the flaps can deploy to (deg).
     max_deployment_rate : float
         Maximum rate at which the airbrakes can be deployed (deg/s).
     max_retraction_rate : float
@@ -280,19 +284,19 @@ class StateVector:
     """
     The StateVector class is used to store the state of the rocket at a given time. The state is stored as a dictionary with the following keys:
 
+    - launch_conditions: The LaunchConditions object associated with the flight.
     - t: time (s)
-    # do this after adding wind, before breaking stages of flight simulator into separate functions
+    # do this for breaking stages of flight simulator into separate functions
     """
-    
-    
+
 
 class PastFlight ():
     """
     Stores the rocket, launch conditions, and apogee of a past flight
-    likely add more things like max speed, max acceleration later
+    likely add more things like max speed, max acceleration later. Also the option to feed a full flightpath, good for comparisons of sim projection to actual flightpaths
     """
     
-    def __init__(self, rocket, launch_conditions, apogee, name = None):
+    def __init__(self, rocket, launch_conditions, apogee = None, name = None):
         self.rocket = rocket
         self.launch_conditions = launch_conditions
         self.apogee = apogee

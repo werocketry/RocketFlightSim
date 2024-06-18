@@ -7,17 +7,17 @@ from .. import constants as con
 from .. import helper_functions as hfunc
 
 
-def plot_ascent(time, height, speed, v_y, a_y, unit="m"):
+def plot_ascent(time, height, airspeed, v_z, a_z, unit="m"):
     """
-    Plot ascent data including height, speed, and vertical acceleration.
+    Plot ascent data including height, airspeed, and vertical acceleration.
 
     Args:
     - time (pd.Series): Time series data.
     - height (pd.Series): Height series data.
-    - speed (pd.Series): Speed series data.
-    - v_y (pd.Series): Vertical velocity series data.
-    - a_y (pd.Series): Vertical acceleration series data.
-    - unit (str): Unit of measurement for height, speed, etc.
+    - airspeed (pd.Series): Airspeed series data.
+    - v_z (pd.Series): Vertical velocity series data.
+    - a_z (pd.Series): Vertical acceleration series data.
+    - unit (str): Unit of measurement for height, airspeed, etc.
     """
     fig, ax1 = plt.subplots()
     ax1.plot(time, height, color="b")
@@ -26,13 +26,13 @@ def plot_ascent(time, height, speed, v_y, a_y, unit="m"):
     ax1.tick_params(axis="y", labelcolor="b")
 
     ax2 = ax1.twinx()
-    ax2.plot(time, v_y, color="r")
+    ax2.plot(time, v_z, color="r")
     ax2.set_ylabel(f"Vertical velocity ({unit}/s)", color="r")
     ax2.tick_params(axis="y", labelcolor="r")
 
     ax3 = ax1.twinx()
     ax3.spines["right"].set_position(("outward", 60))
-    ax3.plot(time, a_y, color="g")
+    ax3.plot(time, a_z, color="g")
     ax3.set_ylabel(f"Vertical acceleration ({unit}/s^2)", color="g")
     ax3.tick_params(axis="y", labelcolor="g")
 
@@ -40,18 +40,18 @@ def plot_ascent(time, height, speed, v_y, a_y, unit="m"):
     plt.show()
 
 
-def plot_aerodynamics(time, height, speed, q, angle_to_vertical, air_density, unit="m"):
+def plot_aerodynamics(time, height, airspeed, q, angle_to_vertical, air_density, unit="m"):
     """
     Plot aerodynamic parameters over the ascent.
 
     Args:
     - time (pd.Series): Time series data.
     - height (pd.Series): Height series data.
-    - speed (pd.Series): Speed series data.
+    - airspeed (pd.Series): Airspeed series data.
     - q (pd.Series): Dynamic pressure series data.
     - angle_to_vertical (pd.Series): Angle to vertical series data.
     - air_density (pd.Series): Air density series data.
-    - unit (str): Unit of measurement for height, speed, etc.
+    - unit (str): Unit of measurement for height, airspeed, etc.
     """
     fig, ax1 = plt.subplots()
     ax1.plot(time, height, color="b", label="Height")
@@ -61,10 +61,10 @@ def plot_aerodynamics(time, height, speed, q, angle_to_vertical, air_density, un
     ax1.set_ylim(0, height.max() * 1.1)
 
     ax2 = ax1.twinx()
-    ax2.plot(time, speed, color="r", label="Speed")
+    ax2.plot(time, airspeed, color="r", label="Speed")
     ax2.set_ylabel(f"Speed ({unit}/s)", color="r")
     ax2.tick_params(axis="y", labelcolor="r")
-    ax2.set_ylim(0, speed.max() * 1.1)
+    ax2.set_ylim(0, airspeed.max() * 1.1)
 
     ax3 = ax1.twinx()
     ax3.spines["right"].set_position(("outward", 60))
@@ -78,7 +78,9 @@ def plot_aerodynamics(time, height, speed, q, angle_to_vertical, air_density, un
     ax4.plot(time, angle_to_vertical * 180 / np.pi, color="c", label="Angle to Vertical")
     ax4.set_ylabel(f"Angle to vertical (deg)", color="c")
     ax4.tick_params(axis="y", labelcolor="c")
+    
     ax4.set_yticks(range(0, 91, 15))
+    ax4.set_ylim(0, angle_to_vertical.max() * 180 / np.pi * 1.1)
 
     ax5 = ax1.twinx()
     ax5.spines["right"].set_position(("outward", 180))
@@ -92,28 +94,28 @@ def plot_aerodynamics(time, height, speed, q, angle_to_vertical, air_density, un
 
 def plot_airbrakes_ascent(ascent, airbrakes, unit="m"):
     """
-    Plot ascent data including height, speed, acceleration, deployment angle, and force on airbrakes.
+    Plot ascent data including height, airspeed, acceleration, deployment angle, and force on airbrakes.
 
     Args:
     - ascent (pd.DataFrame): Dataframe containing the ascent data with airbrakes.
-    - unit (str): Unit of measurement for height, speed, etc.
+    - unit (str): Unit of measurement for height, airspeed, etc.
     """
 
-    # Existing code for height, speed, and acceleration plots
+    # Existing code for height, airspeed, and acceleration plots
     height = (
         ascent["height"].copy() * con.m_to_ft_conversion
         if unit == "ft"
         else ascent["height"].copy()
     )
-    speed = (
-        ascent["speed"].copy() * con.m_to_ft_conversion
+    airspeed = (
+        ascent["airspeed"].copy() * con.m_to_ft_conversion
         if unit == "ft"
-        else ascent["speed"].copy()
+        else ascent["airspeed"].copy()
     )
     accel = (
-        ascent["a_y"].copy() * con.m_to_ft_conversion
+        ascent["a_z"].copy() * con.m_to_ft_conversion
         if unit == "ft"
-        else ascent["a_y"].copy()
+        else ascent["a_z"].copy()
     )
 
     # New code to calculate force
@@ -123,7 +125,7 @@ def plot_airbrakes_ascent(ascent, airbrakes, unit="m"):
 
     fig, ax1 = plt.subplots()
 
-    # Existing plotting code for height, speed, acceleration, and deployment angle
+    # Existing plotting code for height, airspeed, acceleration, and deployment angle
     ax1.plot(ascent["time"], height, color="b")
     ax1.set_xlabel("Time (s)")
     ax1.set_ylabel(f"Height ({unit})", color="b")
@@ -131,7 +133,7 @@ def plot_airbrakes_ascent(ascent, airbrakes, unit="m"):
     ax1.axhline(y=10000, color='gray', linestyle='--')
 
     ax2 = ax1.twinx()
-    ax2.plot(ascent["time"], speed, color="r")
+    ax2.plot(ascent["time"], airspeed, color="r")
     ax2.set_ylabel(f"Speed ({unit}/s)", color="r")
     ax2.tick_params(axis="y", labelcolor="r")
 
@@ -177,16 +179,16 @@ def display_apogee_parameters_table(ascent, parameters_at_flight_events, unit="m
         else ascent["height"].iloc[last_index]
     )
     speed_with_airbrakes = (
-        ascent["speed"].iloc[last_index] * con.m_to_ft_conversion
+        ascent["airspeed"].iloc[last_index] * con.m_to_ft_conversion
         if unit == "ft"
-        else ascent["speed"].iloc[last_index]
+        else ascent["airspeed"].iloc[last_index]
     )
     accel_with_airbrakes = (
-        ascent["a_y"].iloc[last_index] * con.m_to_ft_conversion
+        ascent["a_z"].iloc[last_index] * con.m_to_ft_conversion
         if unit == "ft"
-        else ascent["a_y"].iloc[last_index]
+        else ascent["a_z"].iloc[last_index]
     )
-    g_force_with_airbrakes = abs(ascent["a_y"].iloc[last_index] / con.F_gravity)
+    g_force_with_airbrakes = abs(ascent["a_z"].iloc[last_index] / con.F_gravity)
 
     # Extract parameters at apogee without airbrakes
     time_without_airbrakes = parameters_at_flight_events.loc["Apogee", "Time (s)"]
@@ -232,9 +234,9 @@ def display_apogee_parameters_table(ascent, parameters_at_flight_events, unit="m
 def create_flight_event_table(
     time,
     height,
-    v_y,
-    speed,
-    a_y,
+    v_z,
+    airspeed,
+    a_z,
     g_force,
     Ma,
     dataset,
@@ -248,16 +250,16 @@ def create_flight_event_table(
     Create a table of parameters at key flight events.
 
     Args:
-    - time, height, v_y, speed, a_y, g_force, Ma (pd.Series): Data series.
+    - time, height, v_z, airspeed, a_z, g_force, Ma (pd.Series): Data series.
     - dataset (pd.DataFrame): The dataset containing additional flight data.
     - liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index (int): Indices of key flight events.
-    - unit (str): Unit of measurement for height, speed, etc.
+    - unit (str): Unit of measurement for height, airspeed, etc.
 
     Returns:
     - pd.DataFrame: Table of parameters at key flight events.
     """
     max_g_index = g_force.idxmax()
-    max_speed_Ma_index = speed.idxmax()
+    max_speed_Ma_index = airspeed.idxmax()
     max_q_index = dataset["q"][:apogee_index].idxmax()
 
     parameters_at_flight_events = pd.DataFrame(
@@ -281,31 +283,31 @@ def create_flight_event_table(
                 round(height.iloc[-1], 2),
             ],
             f"Vertical velocity ({unit}/s)": [
-                round(v_y.iloc[liftoff_index], 2),
-                round(v_y.iloc[launch_rail_cleared_index], 2),
-                round(v_y.iloc[max_g_index], 2),
-                round(v_y.iloc[max_q_index], 2),
-                round(v_y.iloc[max_speed_Ma_index], 2),
-                round(v_y.iloc[burnout_index], 2),
-                round(v_y.iloc[-1], 2),
+                round(v_z.iloc[liftoff_index], 2),
+                round(v_z.iloc[launch_rail_cleared_index], 2),
+                round(v_z.iloc[max_g_index], 2),
+                round(v_z.iloc[max_q_index], 2),
+                round(v_z.iloc[max_speed_Ma_index], 2),
+                round(v_z.iloc[burnout_index], 2),
+                round(v_z.iloc[-1], 2),
             ],
             f"Speed ({unit}/s)": [
-                round(speed.iloc[liftoff_index], 2),
-                round(speed.iloc[launch_rail_cleared_index], 2),
-                round(speed.iloc[max_g_index], 2),
-                round(speed.iloc[max_q_index], 2),
-                round(speed.iloc[max_speed_Ma_index], 2),
-                round(speed.iloc[burnout_index], 2),
-                round(speed.iloc[-1], 2),
+                round(airspeed.iloc[liftoff_index], 2),
+                round(airspeed.iloc[launch_rail_cleared_index], 2),
+                round(airspeed.iloc[max_g_index], 2),
+                round(airspeed.iloc[max_q_index], 2),
+                round(airspeed.iloc[max_speed_Ma_index], 2),
+                round(airspeed.iloc[burnout_index], 2),
+                round(airspeed.iloc[-1], 2),
             ],
             f"Vertical accel ({unit}/s^2)": [
-                round(a_y.iloc[liftoff_index], 2),
-                round(a_y.iloc[launch_rail_cleared_index], 2),
-                round(a_y.iloc[max_g_index], 2),
-                round(a_y.iloc[max_q_index], 2),
-                round(a_y.iloc[max_speed_Ma_index], 2),
-                round(a_y.iloc[burnout_index], 2),
-                round(a_y.iloc[-1], 2),
+                round(a_z.iloc[liftoff_index], 2),
+                round(a_z.iloc[launch_rail_cleared_index], 2),
+                round(a_z.iloc[max_g_index], 2),
+                round(a_z.iloc[max_q_index], 2),
+                round(a_z.iloc[max_speed_Ma_index], 2),
+                round(a_z.iloc[burnout_index], 2),
+                round(a_z.iloc[-1], 2),
             ],
             f"G-force (g)": [
                 round(g_force.iloc[liftoff_index], 2),
@@ -319,49 +321,49 @@ def create_flight_event_table(
             f"Mach": [
                 round(
                     hfunc.mach_number_fn(
-                        dataset["speed"].iloc[liftoff_index],
+                        dataset["airspeed"].iloc[liftoff_index],
                         dataset["temperature"].iloc[liftoff_index],
                     ),
                     3,
                 ),
                 round(
                     hfunc.mach_number_fn(
-                        dataset["speed"].iloc[launch_rail_cleared_index],
+                        dataset["airspeed"].iloc[launch_rail_cleared_index],
                         dataset["temperature"].iloc[launch_rail_cleared_index],
                     ),
                     3,
                 ),
                 round(
                     hfunc.mach_number_fn(
-                        dataset["speed"].iloc[max_g_index],
+                        dataset["airspeed"].iloc[max_g_index],
                         dataset["temperature"].iloc[max_g_index],
                     ),
                     3,
                 ),
                 round(
                     hfunc.mach_number_fn(
-                        dataset["speed"].iloc[max_q_index],
+                        dataset["airspeed"].iloc[max_q_index],
                         dataset["temperature"].iloc[max_q_index],
                     ),
                     3,
                 ),
                 round(
                     hfunc.mach_number_fn(
-                        dataset["speed"].iloc[max_speed_Ma_index],
+                        dataset["airspeed"].iloc[max_speed_Ma_index],
                         dataset["temperature"].iloc[max_speed_Ma_index],
                     ),
                     3,
                 ),
                 round(
                     hfunc.mach_number_fn(
-                        dataset["speed"].iloc[burnout_index],
+                        dataset["airspeed"].iloc[burnout_index],
                         dataset["temperature"].iloc[burnout_index],
                     ),
                     3,
                 ),
                 round(
                     hfunc.mach_number_fn(
-                        dataset["speed"].iloc[-1], dataset["temperature"].iloc[-1]
+                        dataset["airspeed"].iloc[-1], dataset["temperature"].iloc[-1]
                     ),
                     3,
                 ),
@@ -381,7 +383,7 @@ def create_flight_event_table(
             "Off Launch Rail",
             "Max g-Force",
             "Max q",
-            "Max Speed, Ma",
+            "Max Airspeed, Ma",
             "Burnout",
             "Apogee",
         ],

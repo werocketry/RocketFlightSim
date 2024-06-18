@@ -58,9 +58,12 @@ NDRT_2020_launch_conditions = LaunchConditions(
     launchpad_pressure = 99109,
     launchpad_temp = 278.03-273.15,
     L_launch_rail = 3.353,
-    launch_angle = 90,
+    launch_rail_elevation = 90,
+    launch_rail_direction=181,
     latitude = 41.775447,
-    altitude = 206
+    altitude = 206,
+    mean_wind_speed=1,
+    wind_heading=180
 )
 NDRT_2020_flight = PastFlight(
     rocket = NDRT_2020_rocket,
@@ -354,9 +357,12 @@ Valetudo_launch_conditions = LaunchConditions(
     launchpad_pressure=94184,
     launchpad_temp=301.53-273.15,
     L_launch_rail=5.7,
-    launch_angle=84.7,
+    launch_rail_elevation=84.7,
+    launch_rail_direction=53,
     latitude=-23.363611,
-    altitude=668
+    altitude=668,
+    mean_wind_speed=3.27,
+    wind_heading=96.77
 )
 Valetudo_flight = PastFlight(
     rocket=Valetudo_rocket,
@@ -819,9 +825,12 @@ Juno3_launch_conditions = LaunchConditions(
     # as per parameters in the GitHub:
     launchpad_temp=306.95-273.15,
     L_launch_rail=5.2,
-    launch_angle=85,
+    launch_rail_elevation=85,
+    launch_rail_direction=105,
     latitude=32.939377,
-    altitude=1480
+    altitude=1480,
+    mean_wind_speed=14, # it looks like the launch time on the ipynb of "around 17hrs local time" is incorrect. Looking at the YouTube video of the launch (https://www.youtube.com/watch?v=sayT2Tos7Fc), they launch 1.5 hrs into the live stream, with about 3.5 hours of launches following them. Launches ended at 4:30 pm in 2023 (https://www.soundingrocket.org/uploads/9/0/6/4/9064598/sa_cup_ims-20220907.pdf). Estimating their launch at around 1pm local time, or 20:00 UTC. Reading the historical data (https://www.dropbox.com/sh/swi7jrl14evqmap/AADW6GMVIv87KkOBY1-flsoIa?e=1), the wind speed at that time was about what they reported in theit ipynb, so we'll stick with that
+    wind_heading=64.23
 )
 Juno3_flight = PastFlight(
     rocket=Juno3_rocket,
@@ -906,9 +915,12 @@ Bella_Lui_launch_conditions = LaunchConditions(
     launchpad_pressure=98043,
     launchpad_temp=286.63-273.15,
     L_launch_rail=4.2,
-    launch_angle=89,
+    launch_rail_elevation=89,
+    launch_rail_direction=45,
     latitude=47.213476,
-    altitude=407
+    altitude=407,
+    mean_wind_speed=1.4,
+    wind_heading=213.21
 )
 Bella_Lui_flight = PastFlight(
     rocket=Bella_Lui_rocket,
@@ -930,7 +942,7 @@ This is the flight that the sim is furthest off from predicting well. Possible r
         - the RocketPy paper says that total impulse of the "class K solid motor" used for the flight was 2120 Ns, but the notebook says 2070.99 Ns
             - https://www.researchgate.net/publication/354034513_RocketPy_Six_Degree-of-Freedom_Rocket_Trajectory_Simulator
 - using a constant Cd may not be a great approximation for a rocket hitting about Mach 0.25 
-    - also, no mention of where the Cd value comes from. If it's ork or RasAero, it's likely not accurate. If it was CFD, they likely would have given a curve
+    - also, no mention of where the Cd value comes from. If it's ork, it's likely not accurate. If it was CFD, they likely would have given a curve
 - no local variation in lapse rate from the standard lapse rate accounted for. Based on how it affects a 10k launch, it can improve the accuracy by about 0.3%, which might be another small factor
 Could diagnose more by comparing plots of data from the flight computer to plots from the sim
 """

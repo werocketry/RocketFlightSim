@@ -133,7 +133,7 @@ latitude_SA = 32.99  # deg, Spaceport America's latitude
 """ https://maps.app.goo.gl/rZT6MRLqHneA7wNX7 """
 altitude_SA = 1401  # m, Spaceport America's elevation
 """ https://www.spaceportamerica.com/faq/#toggle-id-15 """
-launch_angle_SAC = 86  # deg from horizontal
+launch_rail_elevation_SAC = 86  # deg from horizontal
 """ How the standard launch angle at Spaceport America Cup was determined
 
 ESRA changed it to 86° for 2024, as noted in the forum:
@@ -152,7 +152,7 @@ Spaceport_America_avg_launch_conditions = LaunchConditions(
     launchpad_pressure = launchpad_pressure_SAC,
     launchpad_temp = launchpad_temp_SAC,
     L_launch_rail = L_launch_rail_ESRA_provided_SAC,
-    launch_angle = launch_angle_SAC,
+    launch_rail_elevation = launch_rail_elevation_SAC,
     local_T_lapse_rate = T_lapse_rate_SA,
     latitude = latitude_SA,
     altitude = altitude_SA
@@ -165,6 +165,7 @@ default_airbrakes_model = Airbrakes(
     Cd_brakes = 1,
     max_deployment_angle = 45,  # deg
     max_deployment_rate = 5,  # deg/s
+    # TODO: add max retraction rate based on what ours can do
 )
 
 if __name__ == "__main__":
