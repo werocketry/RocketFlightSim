@@ -5,9 +5,9 @@ from ..rocket_classes import Rocket as Rocket
 from ..rocket_classes import LaunchConditions as LaunchConditions
 
 
-def max_theoretical_thrust(rocket: Rocket, launch_conditions: LaunchConditions=None):
+def max_theoretical_g_thrust(rocket: Rocket, launch_conditions: LaunchConditions=None):
     """
-    Returns the maximum theoretical g-force that a rocket can reach assuming no drag, the motor performs at or below spec max thrust, and no parts of the rocket fall off.
+    Returns the maximum theoretical g-force that a rocket can experience during motor burn assuming no drag, the motor performs at or below spec max thrust, and no parts of the rocket fall off.
 
     Args:
         rocket (Rocket): A rocket object
