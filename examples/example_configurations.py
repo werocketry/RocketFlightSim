@@ -165,7 +165,7 @@ default_airbrakes_model = Airbrakes(
     Cd_brakes = 1,
     max_deployment_angle = 45,  # deg
     max_deployment_rate = 5,  # deg/s
-    # TODO: add max retraction rate based on what ours can do
+    max_retraction_rate = 10 # deg/s
 )
 
 if __name__ == "__main__":

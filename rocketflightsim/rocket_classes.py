@@ -29,9 +29,9 @@ class Motor:
         self.dry_mass = dry_mass
         self.thrust_curve = thrust_curve
 
-        self.total_impulse = np.trapz(list(thrust_curve.values()), list(thrust_curve.keys()))
+        self.total_impulse = np.trapz(list(thrust_curve.values()), list(thrust_curve.keys())) # TODO: not important for this in and of itself, but for future additions, look at difference between using numpy.trapz and scipy.integrate.trapz or even other integration functions
         self.burn_time = max(thrust_curve.keys())
-        
+        # TODO: add burn efficiency, some propelant mass (~2-5% ?) becomes dry mass
         if fuel_mass_curve:
             self.fuel_mass_curve = fuel_mass_curve
             self.fuel_mass = fuel_mass_curve[0]
@@ -234,6 +234,8 @@ class Airbrakes:
         Number of airbrake flaps.
     A_flap : float
         Cross-sectional area of each flap (m^2).
+    A_brakes : float
+        Total cross-sectional area of the airbrakes (m^2).
     Cd_brakes : float
         Coefficient of drag of the airbrakes.
     max_deployment_angle : float
@@ -272,7 +274,10 @@ class Airbrakes:
         """
         self.num_flaps = num_flaps
         self.A_flap = A_flap
+        self.A_brakes = A_flap * num_flaps
+
         self.Cd_brakes = Cd_brakes
+
         self.max_deployment_rate = max_deployment_rate
         self.max_deployment_angle = max_deployment_angle
         if max_retraction_rate:

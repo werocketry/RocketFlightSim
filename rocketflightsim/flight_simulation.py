@@ -137,7 +137,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     while height < effective_h_launch_rail:
         # Update environmental conditions based on height
         temperature = hfunc.temp_at_height(height, launchpad_temp, lapse_rate = T_lapse_rate)
-        air_density = hfunc.air_density_optimized(temperature, multiplier,exponent)
+        air_density = hfunc.air_density_optimized(temperature, multiplier, exponent)
 
         # Calculate Mach number, drag coefficient, and forces
         Ma = hfunc.mach_number_fn(airspeed, temperature)
@@ -341,7 +341,7 @@ def simulate_airbrakes_flight_max_deployment(pre_brake_flight, rocket, launch_co
     Simulate the flight of a rocket during its post-burnout ascent with airbrakes deployed until apogee, given its specifications and environmental conditions.
 
     Args:
-    - pre_brake_flight (DataFrame): A DataFrame containing the simulation results from the rocket's ascent until burnout. # TODO: change to a tuple of the dataset at the time to start the simulation with airbrakes
+    - pre_brake_flight (DataFrame): A DataFrame containing the simulation results from the rocket's ascent until burnout. # TODO: change to a tuple of the dataset at the time to start the simulation with airbrakes. Maybe also sim from launch if not given
     - rocket (Rocket): An instance of the Rocket class.
     - launch_conditions (LaunchConditions): An instance of the LaunchConditions class.
     - airbrakes (Airbrakes): An instance of the Airbrakes class.
@@ -372,7 +372,7 @@ def simulate_airbrakes_flight_max_deployment(pre_brake_flight, rocket, launch_co
 
     # Extract airbrakes parameters
     Cd_brakes = airbrakes.Cd_brakes
-    A_brakes = airbrakes.num_flaps * airbrakes.A_flap # TODO: move to airbrakes class? A_Cd_brakes too?
+    A_brakes = airbrakes.A_brakes
     # for efficiency, may be removed if/when the simulation is made more accurate by the cd of the brakes changing during the sim:
     A_Cd_brakes = A_brakes * Cd_brakes
 
@@ -398,7 +398,7 @@ def simulate_airbrakes_flight_max_deployment(pre_brake_flight, rocket, launch_co
         time += timestep
 
         temperature = hfunc.temp_at_height(height, launchpad_temp, lapse_rate = T_lapse_rate)
-        air_density = hfunc.air_density_optimized(temperature, multiplier,exponent)
+        air_density = hfunc.air_density_optimized(temperature, multiplier, exponent)
         
         Ma = hfunc.mach_number_fn(airspeed, temperature)
         Cd_A_rocket = Cd_A_rocket_fn(Ma)
@@ -512,7 +512,8 @@ def simulate_airbrakes_flight_deployment_function_of_height(initial_state_vector
 
     # Extract airbrakes parameters
     Cd_brakes = airbrakes.Cd_brakes
-    A_brakes = airbrakes.num_flaps * airbrakes.A_flap
+    A_brakes = airbrakes.A_brakes
+    # for efficiency, may be removed if/when the simulation is made more accurate by the cd of the brakes changing during the sim:
     A_Cd_brakes = A_brakes * Cd_brakes
 
     # Initialize simulation variables
@@ -533,7 +534,7 @@ def simulate_airbrakes_flight_deployment_function_of_height(initial_state_vector
         time += timestep
 
         temperature = hfunc.temp_at_height(height, launchpad_temp, lapse_rate = T_lapse_rate)
-        air_density = hfunc.air_density_optimized(temperature, multiplier,exponent)
+        air_density = hfunc.air_density_optimized(temperature, multiplier, exponent)
         
         Ma = hfunc.mach_number_fn(airspeed, temperature)
         Cd_A_rocket = Cd_A_rocket_fn(Ma)
@@ -562,22 +563,24 @@ def simulate_airbrakes_flight_deployment_function_of_height(initial_state_vector
         angle_to_vertical = np.arccos(v_z / airspeed)
 
         simulated_values.append(
-            time,
-            height,
-            airspeed,
-            groundspeed,
-            v_x,
-            v_y,
-            v_z,
-            a_x,
-            a_y,
-            a_z,
-            launchpad_temp,
-            air_density,
-            q,
-            Ma,
-            angle_to_vertical,
-            deployment_angle,
+            [
+                time,
+                height,
+                airspeed,
+                groundspeed,
+                v_x,
+                v_y,
+                v_z,
+                a_x,
+                a_y,
+                a_z,
+                launchpad_temp,
+                air_density,
+                q,
+                Ma,
+                angle_to_vertical,
+                deployment_angle,
+            ]
         )
 
     # simulated_values[-1][11] = simulated_values[-2][11]
