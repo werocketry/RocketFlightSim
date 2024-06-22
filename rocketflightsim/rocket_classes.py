@@ -13,7 +13,7 @@ class Motor:
     - thrust_curve: dictionary of thrust (N) produced by the motor at time after ignition (s)
     - total_impulse: total impulse of the motor (Ns)
     - burn_time: time it takes for the motor to burn all of its fuel (s)
-    - fuel_mass_curve: dictionary of mass (kg) at time after ignition (s)
+    - fuel_mass_curve: dictionary of fuel mass (kg) at time after ignition (s)
     - fuel_mass: total mass of fuel in the motor before ignition (kg)
 
     If fuel_mass_curve is not provided but fuel_mass is, fuel_mass_curve is calculated from the thrust_curve and fuel_mass (assuming fuel burn is proportional to thrust). If fuel_mass_curve is provided, fuel_mass is set to the initial mass in fuel_mass_curve. If neither are provided, fuel_mass and fuel_mass_curve are set to 0.
@@ -26,12 +26,29 @@ class Motor:
             fuel_mass_curve: dict=None, 
             fuel_mass: float=None
             ):
+        """Initializes the Motor object.
+
+        Attributes
+        ----------
+        dry_mass : float
+            Mass of the motor without fuel (kg).
+        thrust_curve : dict
+            Dictionary of thrust (N) produced by the motor at time after ignition (s).
+        total_impulse : float
+            Total impulse of the motor (Ns).
+        burn_time : float
+            Time it takes for the motor to burn all of its fuel (s).
+        fuel_mass_curve : dict
+            Dictionary of fuel mass (kg) at time after ignition (s).
+        fuel_mass : float
+            Total mass of fuel in the motor before ignition (kg). # add explanatinos of use/take awahy what's not used in init
+        """
         self.dry_mass = dry_mass
         self.thrust_curve = thrust_curve
 
         self.total_impulse = np.trapz(list(thrust_curve.values()), list(thrust_curve.keys())) # TODO: not important for this in and of itself, but for future additions, look at difference between using numpy.trapz and scipy.integrate.trapz or even other integration functions
         self.burn_time = max(thrust_curve.keys())
-        # TODO: add burn efficiency, some propelant mass (~2-5% ?) becomes dry mass
+        # TODO: add burn efficiency, some propelant mass (~2-5% ?) becomes dry mass (can just assign it to dry mass at the start of the sim/at class init)
         if fuel_mass_curve:
             self.fuel_mass_curve = fuel_mass_curve
             self.fuel_mass = fuel_mass_curve[0]

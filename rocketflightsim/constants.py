@@ -28,7 +28,8 @@ R_specific_air = R_universal / MM_air  # J/(kg*K)
 adiabatic_index_air_times_R_specific_air = adiabatic_index_air * R_specific_air  # J/(kg*K)
 
 # conversion factors
-m_to_ft_conversion = 3.28084  # ft/m
+ft_to_m_conversion = 0.3048 # m/ft
+m_to_ft_conversion = 1/ft_to_m_conversion  # ft/m
 
 # default launch site values. Specific launch site values can be set in LaunchConditions objects
 F_gravity = 9.80665  # m/s^2
