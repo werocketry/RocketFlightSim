@@ -20,7 +20,7 @@ The default for OpenRocket sims is 0.01s for the first while, and then somewhere
 A timestep of 0.02s gives apogees a difference of a few feet for a 10k launch compared to using 0.001s. 0.001s can still be used for one-off sims, but when running many sims, 0.02s is better.
 """
 
-# TODO consider splitting simulator into stages. Could be better for readability, but also for allowing more complex simulations with multiple stages, and going beyond the troposphere with different lapse rates, a different gravity model, and a different wind model. Could even use it for educational purposes like showing the importance of having a launch rail. Might also make it faster not having to store most variables during some stages (nothing stored at all before liftoff, no need to store angle to vertical at each timestep while on launch rail). 
+# TODO consider splitting simulator into stages. Could be better for readability, but also for allowing more complex simulations with multiple stages, and going beyond the troposphere with different lapse rates, a different gravity model, and a different wind model. Could even use it for educational purposes like showing the importance of having a launch rail. Might also make it faster not having to store most variables during some stages (nothing stored at all before liftoff, no need to store angle to vertical at each timestep while on launch rail). Could also make a few things faster and more precise like between ignition and liftoff, instead of timestepping, could solve for the exact time of liftoff.
 # Flight simulation
 def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     """
@@ -63,6 +63,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     if angle_to_vertical == 0:
         angle_to_vertical = 0.0000001
         # TODO: find a better workaround
+            # np.atan2 for compass heading?
 
     # Calculate constants to be used in air density function, set initial air density
     multiplier = launchpad_pressure / (con.R_specific_air * pow(launchpad_temp, - F_gravity / (con.R_specific_air * T_lapse_rate)))

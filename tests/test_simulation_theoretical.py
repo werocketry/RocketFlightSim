@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import unittest
 
 from rocketflightsim.flight_simulation import simulate_flight
-from rocketflightsim.tools.max_theoretical_g_v import max_theoretical_g_thrust, max_theoretical_speed
+from rocketflightsim.tools.max_theoretical_conditions import max_theoretical_accel_motor, max_theoretical_speed
 
 from .test_configs import past_flights
 
@@ -25,7 +25,9 @@ class TestFlightSimulationTheoreticalMaxs(unittest.TestCase):
                 print(f"Flight {flight.name}: \n\tSimulated max airspeed: {round(max_airspeed_simulated,2)} m\n\tMax theoretical airspeed: {round(max_airspeed_theoretical,2)} m\n\tDifference: {round(difference,2)} m\n\tPercent difference: {round(proportional_difference*100,2)}%\n")
                 assert difference > 0
 
-                # TODO: max_acceleration = 
+                max_acceleration_theoretical = max_theoretical_accel_motor(rocket = flight.rocket, launch_conditions = flight.launch_conditions)
+                # TODO: max_acceleration_simulated = 
+                
 
                 # maybe add apogee if max theoretical added to the tool
                 apogee_simulated = dataset["height"].iloc[apogee_index - 1]

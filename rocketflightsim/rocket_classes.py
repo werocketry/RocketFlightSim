@@ -47,6 +47,7 @@ class Motor:
         self.thrust_curve = thrust_curve
 
         self.total_impulse = np.trapz(list(thrust_curve.values()), list(thrust_curve.keys())) # TODO: not important for this in and of itself, but for future additions, look at difference between using numpy.trapz and scipy.integrate.trapz or even other integration functions
+        # TODO: maybe add a test for the simulator function to see if total impulse was added to the rocket's dry mass in the first instant after ignition, it would give a higher max acceleration than the simulator predicts
         self.burn_time = max(thrust_curve.keys())
         # TODO: add burn efficiency, some propelant mass (~2-5% ?) becomes dry mass (can just assign it to dry mass at the start of the sim/at class init)
         if fuel_mass_curve:
@@ -143,7 +144,8 @@ Next up:
         - Note that time is in UTC 
         - Also use it to add to the Prometheus launch conditions in the airbrakes repo
         - Remember that launches can't happen if wind > 20mph, so don't consider data with wind speeds above that when trying to find an average
-    - after comp, incorporate looking at/recording/visualizing flightpath moving in 3D/relative to the launchpad
+    - incorporate looking at/recording/visualizing flightpath moving in 3D/relative to the launchpad
+    - make AoA a real variable/truly incorporate it into the sim
 
 Could be added later:
     - possibly set windspeed as None when not specified and have the simulator run faster by not having to deal with wind. Likely after the break up of the simulation function into different functions for different phases of flight. Maybe a series of sim functions will be chosen from?
@@ -182,6 +184,7 @@ class LaunchConditions:
         Direction the (mean) wind is headed towards (deg). 0 is north, 90 is east, 180 is south, 270 is west.
     """
     # TODO: maybe have it calculate the atmospheric conditions on the ground in init?
+    # TODO: maybe incorporate air humidity?
     def __init__(
         self, 
         launchpad_pressure: float,

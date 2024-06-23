@@ -37,7 +37,7 @@ class TestAirbrakesFlightSimulationMaxDeployment(unittest.TestCase):
             dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditions, timestep=0.001)
             print(f"Burnout: \n\tHeight: {dataset['height'].iloc[burnout_index - 1]} m\n\tAirspeed: {dataset['airspeed'].iloc[burnout_index - 1]} m/s\n\tTime: {dataset['time'].iloc[burnout_index - 1]} s\n")
             print(f"No-airbraking apogee: \n\tHeight: {dataset['height'].iloc[apogee_index - 1]} m\n\tTime: {dataset['time'].iloc[apogee_index - 1]} s\n")
-            # TODO: make it take the actual flight data at burnout and sim from there
+            # TODO: make it take the actual flight data at burnout and sim from there - maybe add a short amount of time to the burnout time in case the motor didn't perform exactly to spec
             
             ascent = simulate_airbrakes_flight_max_deployment(dataset.iloc[:burnout_index].copy(), rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditions, airbrakes=default_airbrakes_model, timestep=0.001)
             print(f"Max deployment airbrakes apogee: \n\tHeight: {ascent['height'].iloc[-1]} m\n\tTime: {ascent['time'].iloc[-1]} s\n\n")

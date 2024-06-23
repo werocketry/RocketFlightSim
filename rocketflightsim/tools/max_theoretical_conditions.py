@@ -1,19 +1,20 @@
 import numpy as np
 from .. import constants as con
 from .. import helper_functions as hfunc
-from ..rocket_classes import Rocket as Rocket
-from ..rocket_classes import LaunchConditions as LaunchConditions
+from ..rocket_classes import Rocket
+from ..rocket_classes import LaunchConditions
 
 
-def max_theoretical_g_thrust(rocket: Rocket, launch_conditions: LaunchConditions=None):
+def max_theoretical_accel_motor(rocket: Rocket, launch_conditions: LaunchConditions=None):
     """
-    Returns the maximum theoretical g-force that a rocket can experience during motor burn assuming no drag, the motor performs at or below spec max thrust, and no parts of the rocket fall off.
+    Returns the maximum theoretical acceleration that a rocket can experience during motor burn. Assumes no drag, the motor performs at or below spec max thrust, and no parts of the rocket fall off.
 
     Args:
-        rocket (Rocket): A rocket object
+        rocket (Rocket): A rocket object.
+        launch_conditions (LaunchConditions, optional): A launch conditions object.
 
     Returns:
-        float: The maximum theoretical g-force on the rocket
+        float: The maximum theoretical acceleration the rocket can experience in m/s^2.
     """
     if launch_conditions:
         F_gravity = launch_conditions.local_gravity
@@ -23,20 +24,22 @@ def max_theoretical_g_thrust(rocket: Rocket, launch_conditions: LaunchConditions
     max_thrust = max(rocket.motor.thrust_curve.values())
     time_of_max_thrust = max(rocket.motor.thrust_curve, key=rocket.motor.thrust_curve.get)
     mass_at_max_thrust = hfunc.mass_at_time(time_of_max_thrust, rocket.dry_mass, rocket.motor.fuel_mass_curve)
+
     max_acceleration = max_thrust / mass_at_max_thrust - F_gravity
-    max_g = max_acceleration / F_gravity
-    return max_g
+
+    return max_acceleration
 
 def max_theoretical_speed(rocket: Rocket, launch_conditions: LaunchConditions=None, timestep: float=0.0001):
     """
-    Returns the maximum theoretical theoretical speed that a rocket can reach assuming no drag, the motor performs at or below spec thrust curve, and no parts of the rocket fall off.
+    Returns the maximum theoretical theoretical speed that a rocket can reach. Assumes no drag, the motor performs at or below spec thrust curve, and no parts of the rocket fall off.
 
     Args:
-        rocket (Rocket): A rocket object
-        launch_conditions (LaunchConditions): A launch conditions object
+        rocket (Rocket): A rocket object.
+        launch_conditions (LaunchConditions, optional): A launch conditions object.
+        timestep (float, optional): The time increment for the integration in seconds.
 
     Returns:
-        float: The maximum theoretical speed the rocket can reach in m/s
+        float: The maximum theoretical speed the rocket can reach in m/s.
     """
     t = 0
     v = 0
