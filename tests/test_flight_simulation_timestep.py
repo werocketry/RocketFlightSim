@@ -22,7 +22,7 @@ class TestDefaultTimestep(unittest.TestCase):
 for timestep in np.logspace(-3, -1, 200):
     dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=Juno3_rocket, timestep=timestep)
     ascent, time_of_max_deployment = simulate_airbrakes_flight_max_deployment(dataset.iloc[:burnout_index].copy(), rocket=Juno3_rocket, launch_conditions=Juno3_launch_conditions, timestep=0.001)
-    apogees.append(ascent["height"].iloc[-1]*3.28084)
+    apogees.append(ascent["z"].iloc[-1]*3.28084)
     print(len(apogees))
 # plot them
 import matplotlib.pyplot as plt

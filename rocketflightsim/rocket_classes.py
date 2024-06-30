@@ -167,24 +167,40 @@ class LaunchConditions:
     launchpad_pressure : float
         Pressure at the launchpad (Pa).
     launchpad_temp : float
-        Temperature at the launchpad (°C).
-    L_launch_rail : float
-        Length of the launch rail (m).
-    launch_rail_elevation : float
-        Angle of the launch rail from horizontal (deg).
-    launch_driection : float
-        Direction of the launch rail (deg). 0 is north, 90 is east, 180 is south, 270 is west.
+        Temperature at the launchpad (K).
+    launchpad_air_density : float
+        Air density at the launchpad (kg/m^3).
+
     local_gravity : float
         Acceleration due to gravity at the launch site (m/s^2).
     local_T_lapse_rate : float
         Temperature lapse rate at the launch site (°C/m, K/m).
+    density_multiplier : float
+        A constant derived from the temperature and pressure at the launchpad, the lapse rate, the specific gas constant for air, and the magnitude of the force of gravity. Used in the air_density_optimized function. Equal to P_launchpad / (R_air * pow(T_launchpad, - F_gravity / (R_air * T_lapse_rate))).
+    density_exponent : float
+        A constant derived from the lapse rate, the specific gas constant for air, and the magnitude of the force of gravity. Used in the air_density_optimized function. Equal to - F_gravity / (R_air * T_lapse_rate) - 1.
+
+    L_launch_rail : float
+        Length of the launch rail (m).
+    angle_to_vertical : float
+        Angle of the rocket to the vertical when it's on the pad (rad).
+    cos_rail_angle_to_vertical : float
+        Cosine of the angle of the launch rail from the vertical.
+    sin_rail_angle_to_vertical : float
+        Sine of the angle of the launch rail from the vertical.
+    launch_driection : float
+        Direction of the launch rail (rad). 0 is north, π/2 is east, π is south, 3π/2 is west.
+
     mean_wind_speed : float
         Mean wind speed relative to the ground (m/s).
     wind_heading : float
-        Direction the (mean) wind is headed towards (deg). 0 is north, 90 is east, 180 is south, 270 is west.
+        Direction the (mean) wind is headed towards (rad). 0 is north, π/2 is east, π is south, 3π/2 is west.
     """
-    # TODO: maybe have it calculate the atmospheric conditions on the ground in init?
+    # TODO: have it calculate the atmospheric conditions on the ground in init
     # TODO: maybe incorporate air humidity?
+    # TODO: move rail trig calculations here
+    # TODO: move launch rail attributes to a separate class, maybe contained inside this one? More for organization than anything else. Maybe rename this one LaunchEnvironment or something similar
+    # TODO: would it make sense to make the air density function a method of this class?
     def __init__(
         self, 
         launchpad_pressure: float,
@@ -228,12 +244,9 @@ class LaunchConditions:
         """
         self.launchpad_pressure = launchpad_pressure
         self.launchpad_temp = launchpad_temp + 273.15
-        self.L_launch_rail = L_launch_rail
-        self.launch_rail_elevation = launch_rail_elevation
-        self.launch_rail_direction = launch_rail_direction
+        self.launchpad_air_density = hfunc.air_density_fn(launchpad_pressure, self.launchpad_temp)
 
         self.local_T_lapse_rate = local_T_lapse_rate
-        
         if local_gravity:
             self.local_gravity = local_gravity
         elif latitude:
@@ -241,8 +254,18 @@ class LaunchConditions:
         else:
             self.local_gravity = con.F_gravity
         
+        self.density_multiplier = launchpad_pressure / (con.R_specific_air * pow(self.launchpad_temp, - self.local_gravity / (con.R_specific_air * local_T_lapse_rate)))
+        self.density_exponent = - self.local_gravity / (con.R_specific_air * local_T_lapse_rate) - 1
+
+        self.L_launch_rail = L_launch_rail
+        self.launch_rail_direction = np.deg2rad(launch_rail_direction)
+
+        self.angle_to_vertical = np.deg2rad(90 - launch_rail_elevation)
+        self.cos_rail_angle_to_vertical = np.cos(self.angle_to_vertical)
+        self.sin_rail_angle_to_vertical = np.sin(self.angle_to_vertical)
+
         self.mean_wind_speed = mean_wind_speed
-        self.wind_heading = wind_heading
+        self.wind_heading = np.deg2rad(wind_heading)
 
 class Airbrakes:
     """
@@ -311,8 +334,28 @@ class StateVector:
 
     - launch_conditions: The LaunchConditions object associated with the flight.
     - t: time (s)
-    # do this for breaking stages of flight simulator into separate functions
+    - x: displacement east (m)
+    - y: displacement north (m)
+    - z: altitude (m)
+    - v_x
+    - v_y
+    - v_z
+    - groundspeed
+    - airspeed
+    - a_x
+    - a_y
+    - a_z
+    - a
+    - temp - needed? won't it just be re-calculated if the above are passed to the next flight phase function?
+    - air_density - same as temp
+    - q - same as temp
+    - Ma - same as temp
+    - angle_to_vertical
     """
+
+    def __init__(self, ):
+        """
+        """
 
 
 class PastFlight ():

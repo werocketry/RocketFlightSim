@@ -80,7 +80,7 @@ example_rocket = Rocket(
     rocket_mass = 14, # kg
     motor = Cesaroni_7579M1520_P,
     Cd_rocket_at_Ma = 0.4,
-    h_second_rail_button = 0.69  # m
+    h_second_rail_button = 0.8  # m
 )
 
 # LaunchConditions class configuration for Spaceport America Cup
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     from rocketflightsim.tools.plotting_functions import plot_ascent, plot_aerodynamics, plot_airbrakes_ascent
 
     dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket = example_rocket, launch_conditions = Spaceport_America_avg_launch_conditions, timestep = 0.001)
-    print(f"Motor burnout: \n\tHeight: {dataset['height'].iloc[burnout_index - 1]} m\n\tSpeed: {dataset['speed'].iloc[burnout_index - 1]} m/s\n\tTime: {dataset['time'].iloc[burnout_index - 1]} s\n")
-    print(f"Apogee: \n\tHeight: {dataset['height'].iloc[apogee_index - 1]} m\n\tTime: {dataset['time'].iloc[apogee_index - 1]} s\n")
+    print(f"Motor burnout: \n\tHeight: {dataset['z'].iloc[burnout_index - 1]} m\n\tSpeed: {dataset['airspeed'].iloc[burnout_index - 1]} m/s\n\tTime: {dataset['time'].iloc[burnout_index - 1]} s\n")
+    print(f"Apogee: \n\tHeight: {dataset['z'].iloc[apogee_index - 1]} m\n\tTime: {dataset['time'].iloc[apogee_index - 1]} s\n")
 
-    plot_ascent(dataset['time'], dataset['height'], dataset['speed'], dataset['v_y'], dataset['a_y'])
+    plot_ascent(dataset['time'], dataset['z'], dataset['airspeed'], dataset['v_z'], dataset['a_z'])

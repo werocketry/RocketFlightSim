@@ -7,20 +7,20 @@ from .. import constants as con
 from .. import helper_functions as hfunc
 
 
-def plot_ascent(time, height, airspeed, v_z, a_z, unit="m"):
+def plot_ascent(time, z, airspeed, v_z, a_z, unit="m"):
     """
     Plot ascent data including height, airspeed, and vertical acceleration.
 
     Args:
     - time (pd.Series): Time series data.
-    - height (pd.Series): Height series data.
+    - z (pd.Series): Height series data.
     - airspeed (pd.Series): Airspeed series data.
     - v_z (pd.Series): Vertical velocity series data.
     - a_z (pd.Series): Vertical acceleration series data.
     - unit (str): Unit of measurement for height, airspeed, etc.
     """
     fig, ax1 = plt.subplots()
-    ax1.plot(time, height, color="b")
+    ax1.plot(time, z, color="b")
     ax1.set_xlabel("Time (s)")
     ax1.set_ylabel(f"Height ({unit})", color="b")
     ax1.tick_params(axis="y", labelcolor="b")
@@ -40,13 +40,13 @@ def plot_ascent(time, height, airspeed, v_z, a_z, unit="m"):
     plt.show()
 
 
-def plot_aerodynamics(time, height, airspeed, q, angle_to_vertical, air_density, unit="m"):
+def plot_aerodynamics(time, z, airspeed, q, angle_to_vertical, air_density, unit="m"):
     """
     Plot aerodynamic parameters over the ascent.
 
     Args:
     - time (pd.Series): Time series data.
-    - height (pd.Series): Height series data.
+    - z (pd.Series): Height series data.
     - airspeed (pd.Series): Airspeed series data.
     - q (pd.Series): Dynamic pressure series data.
     - angle_to_vertical (pd.Series): Angle to vertical series data.
@@ -54,11 +54,11 @@ def plot_aerodynamics(time, height, airspeed, q, angle_to_vertical, air_density,
     - unit (str): Unit of measurement for height, airspeed, etc.
     """
     fig, ax1 = plt.subplots()
-    ax1.plot(time, height, color="b", label="Height")
+    ax1.plot(time, z, color="b", label="Height")
     ax1.set_xlabel("Time (s)")
     ax1.set_ylabel(f"Height ({unit})", color="b")
     ax1.tick_params(axis="y", labelcolor="b")
-    ax1.set_ylim(0, height.max() * 1.1)
+    ax1.set_ylim(0, z.max() * 1.1)
 
     ax2 = ax1.twinx()
     ax2.plot(time, airspeed, color="r", label="Speed")
@@ -102,10 +102,10 @@ def plot_airbrakes_ascent(ascent, airbrakes, unit="m"):
     """
 
     # Existing code for height, airspeed, and acceleration plots
-    height = (
-        ascent["height"].copy() * con.m_to_ft_conversion
+    z = (
+        ascent["z"].copy() * con.m_to_ft_conversion
         if unit == "ft"
-        else ascent["height"].copy()
+        else ascent["z"].copy()
     )
     airspeed = (
         ascent["airspeed"].copy() * con.m_to_ft_conversion
@@ -126,7 +126,7 @@ def plot_airbrakes_ascent(ascent, airbrakes, unit="m"):
     fig, ax1 = plt.subplots()
 
     # Existing plotting code for height, airspeed, acceleration, and deployment angle
-    ax1.plot(ascent["time"], height, color="b")
+    ax1.plot(ascent["time"], z, color="b")
     ax1.set_xlabel("Time (s)")
     ax1.set_ylabel(f"Height ({unit})", color="b")
     ax1.tick_params(axis="y", labelcolor="b")
@@ -174,9 +174,9 @@ def display_apogee_parameters_table(ascent, parameters_at_flight_events, unit="m
     last_index = len(ascent) - 1
     time_with_airbrakes = ascent["time"].iloc[last_index]
     height_with_airbrakes = (
-        ascent["height"].iloc[last_index] * con.m_to_ft_conversion
+        ascent["z"].iloc[last_index] * con.m_to_ft_conversion
         if unit == "ft"
-        else ascent["height"].iloc[last_index]
+        else ascent["z"].iloc[last_index]
     )
     speed_with_airbrakes = (
         ascent["airspeed"].iloc[last_index] * con.m_to_ft_conversion
@@ -233,7 +233,7 @@ def display_apogee_parameters_table(ascent, parameters_at_flight_events, unit="m
 
 def create_flight_event_table(
     time,
-    height,
+    z,
     v_z,
     airspeed,
     a_z,
@@ -250,7 +250,7 @@ def create_flight_event_table(
     Create a table of parameters at key flight events.
 
     Args:
-    - time, height, v_z, airspeed, a_z, g_force, Ma (pd.Series): Data series.
+    - time, z, v_z, airspeed, a_z, g_force, Ma (pd.Series): Data series.
     - dataset (pd.DataFrame): The dataset containing additional flight data.
     - liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index (int): Indices of key flight events.
     - unit (str): Unit of measurement for height, airspeed, etc.
@@ -274,13 +274,13 @@ def create_flight_event_table(
                 round(time.iloc[-1], 2),
             ],
             f"Height ({unit})": [
-                round(height.iloc[liftoff_index], 2),
-                round(height.iloc[launch_rail_cleared_index], 2),
-                round(height.iloc[max_g_index], 2),
-                round(height.iloc[max_q_index], 2),
-                round(height.iloc[max_speed_Ma_index], 2),
-                round(height.iloc[burnout_index], 2),
-                round(height.iloc[-1], 2),
+                round(z.iloc[liftoff_index], 2),
+                round(z.iloc[launch_rail_cleared_index], 2),
+                round(z.iloc[max_g_index], 2),
+                round(z.iloc[max_q_index], 2),
+                round(z.iloc[max_speed_Ma_index], 2),
+                round(z.iloc[burnout_index], 2),
+                round(z.iloc[-1], 2),
             ],
             f"Vertical velocity ({unit}/s)": [
                 round(v_z.iloc[liftoff_index], 2),

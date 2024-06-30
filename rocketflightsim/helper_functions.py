@@ -2,30 +2,53 @@ import numpy as np
 from . import constants as con
 
 # aerodynamics
-def temp_at_height(h, launchpad_temp, lapse_rate = con.T_lapse_rate):
+def temp_at_altitude(h, launchpad_temp, lapse_rate = con.T_lapse_rate):
     """
-    Calculate the temperature at a given height above the launchpad. Within the troposphere, the temperature decreases linearly with height at a rate known as the lapse rate. The lapse rate is typically around 6.5 degrees Celsius per kilometer. 
+    Calculate the temperature at a given altitude above a reference point. Within the troposphere, temperature decreases linearly with increasing altitude at a rate known as the lapse rate. The lapse rate is typically around 6.5 degrees Celsius per kilometer. 
 
-    Args:
-    - h (float): Height above the launchpad in meters.
-    - launchpad_temp (float): Temperature at the launchpad in Celsius or Kelvin.
-    - lapse_rate (float, optional): Rate at which temperature decreases with height in degrees Celsius or Kelvin per meter. Defaults to the standard lapse rate of 0.0065.
+    Args
+    ----
+    h : float
+        Altitude above the reference point in meters.
+    launchpad_temp : float
+        Temperature at the reference altitude in Celsius or Kelvin.
+    lapse_rate : float, optional
+        Rate at which temperature decreases with increasing altitude in degrees Celsius or Kelvin per meter. Defaults to the standard lapse rate of 0.0065.
 
-    Returns:
-    - float: Temperature at the given height in Celsius or Kelvin (same as input).
+    Returns
+    -------
+    float
+        Temperature at the given altitude above the reference in Celsius or Kelvin (same as input).
     """
-    return launchpad_temp + (h * lapse_rate)
+    return launchpad_temp + (h * lapse_rate) # TODO: rename launchpad_temp to reference_temp?
+
+def air_density_fn(pressure, temp):
+    """
+    Calculate the density of air at a given pressure and temperature.
+
+    Args
+    ----
+    - pressure (float): Pressure in Pascals.
+    - temp (float): Temperature in Kelvin.
+
+    Returns
+    -------
+    - float: Air density in kilograms per cubic meter.
+    """
+    return pressure / (con.R_specific_air * temp)
 
 def air_density_optimized(temp, multiplier, exponent):
     """
     Calculate the density of air at a given height above the launchpad.
 
-    Args:
+    Args
+    ----
     - temp (float): Temperature at the given height in Kelvin.
-    - multiplier (float): A constant derived from the temperature and pressure at the launchpad, the lapse rate, the specific gas constant for air, and the magnitude of the force of gravity. Calculated at the start of the simulation script outside of the main loops. Equal to P_launchpad / (R_air * pow(T_launchpad, - F_gravity / (R_air * T_lapse_rate))).
-    - exponent (float): A constant derived from the lapse rate, the specific gas constant for air, and the magnitude of the force of gravity. Calculated at the start of the simulation script outside of the main loops. Equal to - F_gravity / (R_air * T_lapse_rate) - 1.
+    - multiplier (float): A constant derived from the temperature and pressure at the launchpad, the lapse rate, the specific gas constant for air, and the magnitude of the force of gravity. Calculated at initialization of LaunchConditions objects. Equal to P_launchpad / (R_air * pow(T_launchpad, - F_gravity / (R_air * T_lapse_rate))).
+    - exponent (float): A constant derived from the lapse rate, the specific gas constant for air, and the magnitude of the force of gravity. Calculated at initialization of LaunchConditions objects. Equal to - F_gravity / (R_air * T_lapse_rate) - 1.
 
-    Returns:
+    Returns
+    -------
     - float: Air density at the given height in kilograms per cubic meter.
     """
     return multiplier * pow(temp, exponent)
@@ -34,11 +57,13 @@ def calculate_dynamic_pressure(air_density, speed):
     """
     Calculate the dynamic pressure imparted on a solid moving through a fluid.
 
-    Args:
+    Args
+    ----
     - air_density (float): The density of the fluid.
     - speed (float): The relative speed of the solid and the fluid.
 
-    Returns:
+    Returns
+    -------
     - float: The dynamic pressure on the solid.
     """
     return 0.5 * air_density * (speed ** 2)
@@ -47,11 +72,13 @@ def mach_number_fn(v, temp):
     """
     Calculate the Mach number of an object moving through air at a given temperature.
 
-    Args:
+    Args
+    ----
     - v (float): Velocity of the object relative to the air in meters per second.
     - temp (float): Air temperature in Kelvin.
 
-    Returns:
+    Returns
+    -------
     - float: Mach number (dimensionless).
     """
     return v / np.sqrt(con.adiabatic_index_air_times_R_specific_air * temp)
@@ -59,14 +86,16 @@ def mach_number_fn(v, temp):
 # gravity
 def get_local_gravity(latitude, h = 0, h_expected = None):
     """
-    Calculate the acceleration due to gravity at a given latitude and height above sea level.
+    Calculate the acceleration due to gravity at a given latitude and altitude above sea level.
 
-    Args:
+    Args
+    ----
     - latitude (float): Latitude of launch site in degrees.
     - h (float): Ground level elevation above sea level in meters. Defaults to 0.
-    - h_expected (float): Expected height the rocket will reach above sea level in meters. Defaults to None, in which case the function will return the acceleration due to gravity at the launchpad instead of the average between the launchpad and the expected apogee.
+    - h_expected (float): Expected altitude the rocket will reach above sea level in meters. Defaults to None, in which case the function will return the acceleration due to gravity at the launchpad instead of the average between the launchpad and the expected apogee.
 
-    Returns:
+    Returns
+    -------
     - float: Acceleration due to gravity in meters per second squared.
 
     Based on the International Gravity Formula 1980 (IGF80) model, as outlined in https://en.wikipedia.org/wiki/Theoretical_gravity#International_gravity_formula_1980
@@ -96,44 +125,35 @@ def get_local_gravity(latitude, h = 0, h_expected = None):
         return g_launchpad
 
 # not used in simulator
-def pressure_at_height(h, launchpad_temp, launchpad_pressure):
+def pressure_at_altitude(h, launchpad_temp, launchpad_pressure):
     """
-    Calculate the air pressure at a given height above the launchpad.
+    Calculate the air pressure at a given altitude above the launchpad.
 
-    Args:
-    - h (float): Height above the launchpad in meters.
+    Args
+    ----
+    - h (float): Altitude above the launchpad in meters.
     - launchpad_temp (float): Temperature at the launchpad in Kelvin.
     - launchpad_pressure (float): Air pressure at the launchpad in Pascals.
 
-    Returns:
-    - float: Air pressure at the given height in Pascals.
+    Returns
+    -------
+    - float: Air pressure at the given altitude in Pascals.
     """ # note, could use a specific sim's local gravity and lapse rate to be more accurate
     return launchpad_pressure * pow(
         (1 - (h * con.T_lapse_rate / launchpad_temp)),
         (con.F_gravity / (con.R_specific_air * con.T_lapse_rate))
     )
 
-def air_density_fn(pressure, temp):
-    """
-    Calculate the density of air at a given pressure and temperature.
-
-    Args:
-    - pressure (float): Pressure in Pascals.
-    - temp (float): Temperature in Kelvin.
-
-    Returns:
-    - float: Air density in kilograms per cubic meter.
-    """
-    return pressure / (con.R_specific_air * temp)
-
 def lookup_dynamic_viscosity(temp):
     """
     Look up the dynamic viscosity of air at a given temperature.
 
-    Args:
+    Args
+    ----
     - temp (float): Temperature in Kelvin.
 
-    Returns:
+    Returns
+    -------
     - float: Dynamic viscosity in kilograms per meter-second.
 
     Source of lookup table: https://www.me.psu.edu/cimbala/me433/Links/Table_A_9_CC_Properties_of_Air.pdf
@@ -151,13 +171,15 @@ def calculate_reynolds_number(air_density, speed, len_characteristic, dynamic_vi
     """
     Calculate the Reynolds number of a solid moving through air.
 
-    Args:
+    Args
+    ----
     - air_density (float): The density of the air.
     - speed (float): The relative speed of the solid and the air.
     - len_characteristic (float): The characteristic length of the solid.
     - dynamic_viscosity (float): The dynamic viscosity of the air.
 
-    Returns:
+    Returns
+    -------
     - float: The Reynolds number of the solid.
     """
     return (air_density * speed * len_characteristic) / dynamic_viscosity
@@ -168,12 +190,14 @@ def mass_at_time(time, dry_mass, fuel_mass_lookup):
     """
     Calculate the total mass of the rocket at a given time during motor burn.
 
-    Args:
+    Args
+    ----
     - time (float): Time in seconds since motor ignition.
     - dry_mass (float): Dry mass of the rocket in kilograms.
     - fuel_mass_lookup (dict): Dictionary mapping times to fuel masses.
 
-    Returns:
+    Returns
+    -------
     - float: Total mass of the rocket at the specified time.
     """
     time_list = list(fuel_mass_lookup.keys())
@@ -186,11 +210,13 @@ def thrust_at_time(time, engine_thrust_lookup):
     """
     Calculate the thrust of the rocket engine at a given time during motor burn.
 
-    Args:
+    Args
+    ----
     - time (float): Time in seconds since motor ignition.
     - engine_thrust_lookup (dict): Dictionary mapping times to thrust values.
 
-    Returns:
+    Returns
+    -------
     - float: Thrust of the engine at the specified time.
     """
     time_list = list(engine_thrust_lookup.keys())

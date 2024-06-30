@@ -30,6 +30,6 @@ class TestFlightSimulationTheoreticalMaxs(unittest.TestCase):
                 
 
                 # maybe add apogee if max theoretical added to the tool
-                apogee_simulated = dataset["height"].iloc[apogee_index - 1]
+                apogee_simulated = dataset["z"].iloc[apogee_index - 1]
                 
             print("\n--------------------")
