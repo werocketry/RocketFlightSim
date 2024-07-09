@@ -18,7 +18,7 @@ class Motor:
 
     If fuel_mass_curve is not provided but fuel_mass is, fuel_mass_curve is calculated from the thrust_curve and fuel_mass (assuming fuel burn is proportional to thrust). If fuel_mass_curve is provided, fuel_mass is set to the initial mass in fuel_mass_curve. If neither are provided, fuel_mass and fuel_mass_curve are set to 0.
     """
-    
+
     def __init__(
             self, 
             dry_mass: float, 
@@ -184,12 +184,16 @@ class LaunchConditions:
         Length of the launch rail (m).
     angle_to_vertical : float
         Angle of the rocket to the vertical when it's on the pad (rad).
-    cos_rail_angle_to_vertical : float
-        Cosine of the angle of the launch rail from the vertical.
     sin_rail_angle_to_vertical : float
         Sine of the angle of the launch rail from the vertical.
-    launch_driection : float
+    cos_rail_angle_to_vertical : float
+        Cosine of the angle of the launch rail from the vertical.
+    launch_rail_direction : float
         Direction of the launch rail (rad). 0 is north, π/2 is east, π is south, 3π/2 is west.
+    sin_launch_rail_direction : float
+        Sine of the direction of the launch rail.
+    cos_launch_rail_direction : float
+        Cosine of the direction of the launch rail.
 
     mean_wind_speed : float
         Mean wind speed relative to the ground (m/s).
@@ -227,7 +231,7 @@ class LaunchConditions:
             Length of the launch rail (m).
         launch_rail_elevation : float
             Angle of the launch rail from horizontal (deg). Defaults to 90 (vertical launch rail).
-        launch_driection : float
+        launch_rail_direction : float
             Direction of the launch rail (deg). 0 is north, 90 is east, 180 is south, 270 is west. Defaults to 0 (north).
         local_gravity : float, optional
             Acceleration due to gravity at the launch site (m/s^2). Defaults to 9.80665.
@@ -253,16 +257,23 @@ class LaunchConditions:
             self.local_gravity = hfunc.get_local_gravity(latitude, altitude)
         else:
             self.local_gravity = con.F_gravity
-        
+
         self.density_multiplier = launchpad_pressure / (con.R_specific_air * pow(self.launchpad_temp, - self.local_gravity / (con.R_specific_air * local_T_lapse_rate)))
         self.density_exponent = - self.local_gravity / (con.R_specific_air * local_T_lapse_rate) - 1
 
         self.L_launch_rail = L_launch_rail
         self.launch_rail_direction = np.deg2rad(launch_rail_direction)
+        self.sin_launch_rail_direction = np.sin(self.launch_rail_direction)
+        self.cos_launch_rail_direction = np.cos(self.launch_rail_direction)
+
+        if launch_rail_elevation == 90:
+            launch_rail_elevation = 89.999999
+            # TODO: find a better workaround
+                # np.atan2 for compass heading?
 
         self.angle_to_vertical = np.deg2rad(90 - launch_rail_elevation)
-        self.cos_rail_angle_to_vertical = np.cos(self.angle_to_vertical)
         self.sin_rail_angle_to_vertical = np.sin(self.angle_to_vertical)
+        self.cos_rail_angle_to_vertical = np.cos(self.angle_to_vertical)
 
         self.mean_wind_speed = mean_wind_speed
         self.wind_heading = np.deg2rad(wind_heading)
@@ -329,13 +340,14 @@ class Airbrakes:
             self.max_retraction_rate = max_deployment_rate
 
 class StateVector:
-    """
-    The StateVector class is used to store the state of the rocket at a given time. The state is stored as a dictionary with the following keys:
+    """ Needed? Just pass needed inputs into the flight function for the phase in the function that combines all the phases?
+    
+    The StateVector class is used to store the state of a rocket's flight at a given time. The state is stored as a dictionary with the following keys:
 
     - launch_conditions: The LaunchConditions object associated with the flight.
     - t: time (s)
-    - x: displacement east (m)
-    - y: displacement north (m)
+    - x: displacement east (m) - add after finishing implementation and comparing speed to old version
+    - y: displacement north (m)- add after finishing implementation and comparing speed to old version
     - z: altitude (m)
     - v_x
     - v_y
@@ -352,18 +364,23 @@ class StateVector:
     - Ma - same as temp
     - angle_to_vertical
     """
-
+    # compass heading/angle to vertical as methods?
     def __init__(self, ):
         """
         """
 
+class Flightpath:
+    """
+    The Flightpath class 
+    just make it a series of StateVectors? Does it need a class in that case?
+    """
 
 class PastFlight ():
     """
     Stores the rocket, launch conditions, and apogee of a past flight
     likely add more things like max speed, max acceleration later. Also the option to feed a full flightpath, good for comparisons of sim projection to actual flightpaths
     """
-    
+
     def __init__(self, rocket, launch_conditions, apogee = None, name = None):
         self.rocket = rocket
         self.launch_conditions = launch_conditions

@@ -15,10 +15,8 @@ from example_configurations import default_airbrakes_model
 class TestFlightSimulationEmpirical(unittest.TestCase):
     def test_flight_simulation_empirical(self):
             print("Testing flight simulation")
-            from rocketflightsim.flight_simulation import flight_sim_ignition_to_liftoff
 
             for flight in past_flights:
-                print(f'With new liftoff function, time to liftoff is:\n{flight_sim_ignition_to_liftoff(flight.rocket, flight.launch_conditions)}')
                 dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket=flight.rocket, launch_conditions=flight.launch_conditions, timestep=0.001)
 
                 apogee_simulated = dataset["z"].iloc[apogee_index - 1]

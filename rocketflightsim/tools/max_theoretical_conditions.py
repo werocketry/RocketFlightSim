@@ -29,7 +29,7 @@ def max_theoretical_accel_motor(rocket: Rocket, launch_conditions: LaunchConditi
 
     return max_acceleration
 
-def max_theoretical_speed(rocket: Rocket, launch_conditions: LaunchConditions=None, timestep: float=0.0001):
+def max_theoretical_speed(rocket: Rocket, launch_conditions: LaunchConditions=None, timestep: float=0.0005):
     """
     Returns the maximum theoretical theoretical speed that a rocket can reach. Assumes no drag, the motor performs at or below spec thrust curve, and no parts of the rocket fall off.
 
