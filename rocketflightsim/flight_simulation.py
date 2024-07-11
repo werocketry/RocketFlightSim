@@ -204,7 +204,7 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, state_vector
     v_x = state_vector[2]
     v_y = state_vector[3]
     v_z = state_vector[4]
-    groundspeed = np.sqrt(v_x**2 + v_y**2 + v_z**2)
+    groundspeed = np.sqrt(v_x**2 + v_y**2 + v_z**2) # for comparing to airspeed to get AoA at clearance, eventually make a better way to have it fly with a small AoA for the first little bit
     airspeed = np.sqrt((v_x - 0.2*windspeed_x)**2 + (v_y - 0.2*windspeed_y)**2 + v_z**2)
 
     compass_heading = launch_conditions.launch_rail_direction
@@ -674,14 +674,16 @@ def simulate_airbrakes_flight_max_deployment(pre_brake_flight, rocket, launch_co
     """
     Simulate the flight of a rocket during its post-burnout ascent with airbrakes deployed until apogee, given its specifications and environmental conditions.
 
-    Args:
+    Args
+    ----
     - pre_brake_flight (DataFrame): A DataFrame containing the simulation results from the rocket's ascent until burnout. # TODO: change to a tuple of the dataset at the time to start the simulation with airbrakes. Maybe also sim from launch if not given
     - rocket (Rocket): An instance of the Rocket class.
     - launch_conditions (LaunchConditions): An instance of the LaunchConditions class.
     - airbrakes (Airbrakes): An instance of the Airbrakes class.
     - timestep (float, optional): The time increment for the simulation in seconds.
 
-    Returns:
+    Returns
+    -------
     - DataFrame: A DataFrame containing the simulation results from the rocket's post-burnout ascent with airbrakes deployed until apogee.
     """
     # Extract rocket parameters
@@ -812,7 +814,8 @@ def simulate_airbrakes_flight_deployment_function_of_height(initial_state_vector
     """
     Simulate the flight of a rocket during its post-burnout ascent with airbrakes deployed according to a supplied function of height.
 
-    Args:
+    Args
+    ----
     - initial_state_vector (list): A list containing the initial state of the rocket at the start of the airbrakes simulation. First index is z, second is v_x, third is v_y, fourth is v_z.
     - rocket (Rocket): An instance of the Rocket class.
     - launch_conditions (LaunchConditions): An instance of the LaunchConditions class.
@@ -820,7 +823,8 @@ def simulate_airbrakes_flight_deployment_function_of_height(initial_state_vector
     - deployment_function (function): A function that takes the height of the rocket as an argument and returns the angle of the airbrakes deployment at that height in radians.
     - timestep (float, optional): The time increment for the simulation in seconds.
 
-    Returns:
+    Returns
+    -------
     - DataFrame: A DataFrame containing the simulation results from the rocket's post-burnout ascent with airbrakes deployed until apogee.
     """
     # Extract rocket parameters

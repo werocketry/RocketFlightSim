@@ -9,12 +9,14 @@ def max_theoretical_accel_motor(rocket: Rocket, launch_conditions: LaunchConditi
     """
     Returns the maximum theoretical acceleration that a rocket can experience during motor burn. Assumes no drag, the motor performs at or below spec max thrust, and no parts of the rocket fall off.
 
-    Args:
-        rocket (Rocket): A rocket object.
-        launch_conditions (LaunchConditions, optional): A launch conditions object.
+    Args
+    ----
+    - rocket (Rocket): A rocket object.
+    - launch_conditions (LaunchConditions, optional): A launch conditions object.
 
-    Returns:
-        float: The maximum theoretical acceleration the rocket can experience in m/s^2.
+    Returns
+    -------
+    - float: The maximum theoretical acceleration the rocket can experience in m/s^2.
     """
     if launch_conditions:
         F_gravity = launch_conditions.local_gravity
@@ -33,13 +35,15 @@ def max_theoretical_speed(rocket: Rocket, launch_conditions: LaunchConditions=No
     """
     Returns the maximum theoretical theoretical speed that a rocket can reach. Assumes no drag, the motor performs at or below spec thrust curve, and no parts of the rocket fall off.
 
-    Args:
-        rocket (Rocket): A rocket object.
-        launch_conditions (LaunchConditions, optional): A launch conditions object.
-        timestep (float, optional): The time increment for the integration in seconds.
+    Args
+    ----
+    - rocket (Rocket): A rocket object.
+    - launch_conditions (LaunchConditions, optional): A launch conditions object.
+    - timestep (float, optional): The time increment for the integration in seconds.
 
-    Returns:
-        float: The maximum theoretical speed the rocket can reach in m/s.
+    Returns
+    -------
+    - float: The maximum theoretical speed the rocket can reach in m/s.
     """
     t = 0
     v = 0

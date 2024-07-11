@@ -1,4 +1,4 @@
-# add both a sensitvity analysis for exploring the bounds of the expected parameter space, and a Monte Carlo analysis (separate files: extrema_sensitivity_analysis.py and monte_carlo_analysis.py). Can take most of it from airbrakes repo
+# TODO: add both a sensitvity analysis for exploring the bounds of the expected parameter space, and a Monte Carlo analysis (separate files: extrema_sensitivity_analysis.py and monte_carlo_analysis.py). Can take most of it from airbrakes repo
     # maybe also provide a method for comparing the results of the sensitivity analysis to the results of the Monte Carlo analysis, could be interesting. Put in examples folder
 # provide methods for visualizing the results of the comparison, as well as the results of each individual analysis
 

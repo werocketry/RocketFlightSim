@@ -23,8 +23,9 @@ def flutter_velocity_trapezoidal_fins(input_dict : dict):
 
     Ensure to use the same unit for all length inputs, and use Pa for the shear modulus and air pressure. Note that all length units cancel out except for the speed of sound's length unit, m, which is what final flutter velocity is returned as (m/s) regardless of the unit of length used for the inputs.
 
-    Args:
-    input_dict (dict): dictionary containing the following key-value pairs:
+    Args
+    ----
+    - input_dict (dict): dictionary containing the following key-value pairs:
         G (float): shear modulus, Pa
         c_r (float): root chord, unit of length
         c_t (float): tip chord, unit of length
@@ -34,8 +35,9 @@ def flutter_velocity_trapezoidal_fins(input_dict : dict):
         P (float): pressure, Pa
         T (float): temperature, K
 
-    Returns:
-    float: flutter velocity, m/s
+    Returns
+    -------
+    - float: flutter velocity, m/s
     """
 
     # Inputs
