@@ -34,15 +34,21 @@ def flight_sim_ignition_to_liftoff(rocket, launch_conditions):
 
     Args
     ----
-    - rocket (Rocket): An instance of the Rocket class.
-    - launch_conditions (LaunchConditions): An instance of the LaunchConditions class.
+    rocket : Rocket
+        An instance of the Rocket class.
+    launch_conditions : LaunchConditions
+        An instance of the LaunchConditions class.
 
     Returns
     -------
-    - float: Time after ignition at which the rocket lifts off in seconds.
+    float
+        Time after ignition at which the rocket lifts off in seconds.
+
+    Notes
+    ----- 
+    This implementation assumes linear interpolation of mass and thrust curves. This is reasonable given that the curves should have enough points to be relatively smooth.
     """
     # TODO: account for when keys of engine_thrust_lookup and fuel_mass_lookup aren't aligned
-    # note that this implementation assumes linear interpolation of mass and thrust curves, reasonable given the curves should have enough points to be relatively smooth
 
     liftoff_thrust_to_mass_ratio = launch_conditions.local_gravity * launch_conditions.cos_rail_angle_to_vertical # move to init of launch_conditions class?
 
@@ -172,8 +178,8 @@ def flight_sim_liftoff_to_rail_clearance(rocket, launch_conditions, t_liftoff, t
     return simulated_values
 
 
-def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, state_vector, timestep=default_timestep):
-    """ to get it implemented, just use what was used previously. after that though, a better way to deal with AoA
+def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_state_vector, timestep=default_timestep):
+    """ 
     
     """
 
@@ -199,11 +205,11 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, state_vector
     burnout_time = rocket.motor.burn_time
 
     # unpack simulation variables
-    time = state_vector[0]
-    z = state_vector[1]
-    v_x = state_vector[2]
-    v_y = state_vector[3]
-    v_z = state_vector[4]
+    time = initial_state_vector[0]
+    z = initial_state_vector[1]
+    v_x = initial_state_vector[2]
+    v_y = initial_state_vector[3]
+    v_z = initial_state_vector[4]
     groundspeed = np.sqrt(v_x**2 + v_y**2 + v_z**2) # for comparing to airspeed to get AoA at clearance, eventually make a better way to have it fly with a small AoA for the first little bit
     airspeed = np.sqrt((v_x - 0.2*windspeed_x)**2 + (v_y - 0.2*windspeed_y)**2 + v_z**2)
 
@@ -265,8 +271,25 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, state_vector
     return simulated_values
 
 
-def flight_sim_burnout_to_apogee(rocket, launch_conditions, state_vector, timestep=default_timestep):
-    """ to get it implemented, just use what was used previously. after that though, a better way to deal with AoA
+def flight_sim_burnout_to_apogee(rocket, launch_conditions, initial_state_vector, timestep=default_timestep):
+    """
+    Simulate a rocket's flight from the time of motor burnout until apogee.
+
+    Args
+    ----
+    rocket : Rocket
+        An instance of the Rocket class.
+    launch_conditions : LaunchConditions
+        An instance of the LaunchConditions class.
+    initial_state_vector : tuple
+        aaa
+    timestep : float, optional
+        The time increment for the simulation in seconds.
+
+    Returns
+    -------
+    list
+        aaa
     
     """
     # unpack environmental variables
@@ -288,11 +311,11 @@ def flight_sim_burnout_to_apogee(rocket, launch_conditions, state_vector, timest
     Cd_A_rocket_fn = rocket.Cd_A_rocket
 
     # unpack simulation variables
-    time = state_vector[0]
-    z = state_vector[1]
-    v_x = state_vector[2]
-    v_y = state_vector[3]
-    v_z = state_vector[4]
+    time = initial_state_vector[0]
+    z = initial_state_vector[1]
+    v_x = initial_state_vector[2]
+    v_y = initial_state_vector[3]
+    v_z = initial_state_vector[4]
     groundspeed = np.sqrt(v_x**2 + v_y**2 + v_z**2)
     airspeed = np.sqrt((v_x - 0.2*windspeed_x)**2 + (v_y - 0.2*windspeed_y)**2 + v_z**2)
 
@@ -350,10 +373,38 @@ def flight_sim_burnout_to_apogee(rocket, launch_conditions, state_vector, timest
     # TODO maybe after first implementation, have it determine the exact state (between timesteps) at apogee and replace the last state with that
     return simulated_values
 
-
+def flight_sim_ignition_to_apogee(rocket, launch_conditions, timestep=default_timestep):
+    """
+    
+    """
+    t_liftoff = flight_sim_ignition_to_liftoff(rocket, launch_conditions)
+    flight_to_rail_clearance = flight_sim_liftoff_to_rail_clearance(rocket, launch_conditions, t_liftoff, timestep)
+    state_at_rail_clearance = flight_to_rail_clearance[-1]
+    flight_to_burnout = flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, state_at_rail_clearance, timestep)
+    state_at_burnout = flight_to_burnout[-1]
+    flight_to_apogee = flight_sim_burnout_to_apogee(rocket, launch_conditions, state_at_burnout, timestep)
+    return flight_to_apogee[-1]
 
 """ combining them. and likely some kind of flagging specific times as key events (needed? at least some of them can be gotten from the launch conditions like burnout (from time), liftoff (first non-zero height), and rail clearance (from rail height))
 
+key events:
+    ignition
+        t = 0
+    liftoff
+        first v_z > 0
+    max g from motor burn
+        a_max
+            can be solved for by looking at the thrust curve and mass curve like done in flight_sim_ignition_to_liftoff
+    rail clearance
+        first z > effective_h_launch_rail
+    max q
+        air_density * v ** 2 is max
+    max speed and Ma
+        v = v_max
+    burnout
+        from time and motor class
+    apogee
+        last simmed state
 """
 
 
