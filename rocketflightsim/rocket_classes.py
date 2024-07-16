@@ -7,41 +7,47 @@ from . import helper_functions as hfunc
 
 class Motor:
     """
-    The Motor class is used to store the properties of a rocket motor. The properties are:
+    The Motor class is used to store the properties of a rocket motor.
 
-    - dry_mass: mass of the motor without fuel (kg)
-    - thrust_curve: dictionary of thrust (N) produced by the motor at time after ignition (s)
-    - total_impulse: total impulse of the motor (Ns)
-    - burn_time: time it takes for the motor to burn all of its fuel (s)
-    - fuel_mass_curve: dictionary of fuel mass (kg) at time after ignition (s)
-    - fuel_mass: total mass of fuel in the motor before ignition (kg)
-
-    If fuel_mass_curve is not provided but fuel_mass is, fuel_mass_curve is calculated from the thrust_curve and fuel_mass (assuming fuel burn is proportional to thrust). If fuel_mass_curve is provided, fuel_mass is set to the initial mass in fuel_mass_curve. If neither are provided, fuel_mass and fuel_mass_curve are set to 0.
+    Attributes
+    ----------
+    dry_mass : float
+        Mass of the motor without fuel (kg).
+    thrust_curve : dict
+        Dictionary of thrust (N) produced by the motor at time after ignition (s).
+    total_impulse : float
+        Total impulse of the motor (Ns).
+    burn_time : float
+        Time it takes for the motor to burn all of its fuel (s).
+    fuel_mass_curve : dict
+        Dictionary of fuel mass (kg) at time after ignition (s).
+    fuel_mass : float
+        Total mass of fuel in the motor before ignition (kg).
     """
 
     def __init__(
             self, 
-            dry_mass: float, 
-            thrust_curve: dict, 
-            fuel_mass_curve: dict=None, 
-            fuel_mass: float=None
+            dry_mass : float, 
+            thrust_curve : dict, 
+            fuel_mass_curve : dict = None, 
+            fuel_mass : float = None
             ):
         """Initializes the Motor object.
 
-        Attributes
+        Parameters
         ----------
         dry_mass : float
             Mass of the motor without fuel (kg).
         thrust_curve : dict
             Dictionary of thrust (N) produced by the motor at time after ignition (s).
-        total_impulse : float
-            Total impulse of the motor (Ns).
-        burn_time : float
-            Time it takes for the motor to burn all of its fuel (s).
-        fuel_mass_curve : dict
+        fuel_mass_curve : dict, optional
             Dictionary of fuel mass (kg) at time after ignition (s).
-        fuel_mass : float
+        fuel_mass : float, optional
             Total mass of fuel in the motor before ignition (kg). # add explanatinos of use/take awahy what's not used in init
+        
+        Notes
+        -----
+        If fuel_mass_curve is not provided but fuel_mass is, fuel_mass_curve is calculated from the thrust_curve and fuel_mass (assuming fuel burn is proportional to thrust). If fuel_mass_curve is provided, fuel_mass is set to the initial mass in fuel_mass_curve. If neither are provided, fuel_mass and fuel_mass_curve are set to 0.
         """
         self.dry_mass = dry_mass
         self.thrust_curve = thrust_curve
@@ -82,7 +88,7 @@ class Rocket:
     Cd_rocket_at_Ma : float or function
         Coefficient of drag of the rocket. May be given as a function of Mach number or as a constant.
     h_second_rail_button : float
-        Height of the second rail button from the bottom of the rocket (m). This is the upper button if there are only 2.
+        Height of the second rail button (or launch lug) from the bottom of the rocket (m). This is the upper button (or launch lug) if there are only 2.
     dry_mass : float
         Total mass of the rocket without fuel (kg).
     Cd_A_rocket : function
@@ -95,7 +101,7 @@ class Rocket:
         motor : Motor,
         A_rocket : float,
         Cd_rocket_at_Ma = 0.45,
-        h_second_rail_button : float = 0.69,
+        h_second_rail_button : float = 0.8,
     ):
         """Initializes the Rocket object.
 
@@ -110,7 +116,7 @@ class Rocket:
         Cd_rocket_at_Ma : float or function, optional
             Coefficient of drag of the rocket. May be given as a function of Mach number or as a constant. Defaults to a constant 0.45, which is in the ballpark of what most student team competition rockets our size have.
         h_second_rail_button : float, optional
-            Height of the second rail button from the bottom of the rocket (m). This is the upper button if there are only 2. Defaults to 0.7m, which is reasonable for most student team competition rockets. Doesn't matter much if it's not set as it changes apogee by less than 10ft on a 10k ft launch when set to 0.
+            Height of the second rail button (or launch lug) from the bottom of the rocket (m). This is the upper button (or launch lug) if there are only 2. Defaults to 0.8m, which is reasonable for most student team competition rockets. Doesn't matter much if it's not set as it changes apogee by less than 10ft on a 10k ft launch when set to 0.
         """
 
         self.rocket_mass = rocket_mass
@@ -146,6 +152,9 @@ Next up:
         - Remember that launches can't happen if wind > 20mph, so don't consider data with wind speeds above that when trying to find an average
     - incorporate looking at/recording/visualizing flightpath moving in 3D/relative to the launchpad
     - make AoA a real variable/truly incorporate it into the sim
+    - more complex wind model:
+        - https://en.wikipedia.org/wiki/Wind_profile_power_law
+        - https://en.wikipedia.org/wiki/Log_wind_profile
 
 Could be added later:
     - possibly set windspeed as None when not specified and have the simulator run faster by not having to deal with wind. Likely after the break up of the simulation function into different functions for different phases of flight. Maybe a series of sim functions will be chosen from?
@@ -207,17 +216,17 @@ class LaunchConditions:
     # TODO: would it make sense to make the air density function a method of this class?
     def __init__(
         self, 
-        launchpad_pressure: float,
-        launchpad_temp: float,
-        L_launch_rail: float,
-        launch_rail_elevation: float = 90,
-        launch_rail_direction: float = 0,
-        local_gravity: float = None,
-        local_T_lapse_rate: float = con.T_lapse_rate,
-        latitude: float = None,
-        altitude: float = 0,
-        mean_wind_speed = 0,
-        wind_heading = 0,
+        launchpad_pressure : float,
+        launchpad_temp : float,
+        L_launch_rail : float,
+        launch_rail_elevation : float = 90,
+        launch_rail_direction : float = 0,
+        local_gravity : float = None,
+        local_T_lapse_rate : float = con.T_lapse_rate,
+        latitude : float = None,
+        altitude : float = 0,
+        mean_wind_speed : float = 0,
+        wind_heading : float = 0,
     ):
         """Initializes the LaunchConditions object. 
         

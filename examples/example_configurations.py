@@ -77,7 +77,7 @@ Cesaroni_7450M2505_P = Motor(
 # Example rocket configuration
 example_rocket = Rocket(
     A_rocket = 0.015326, # m^2
-    rocket_mass = 14, # kg
+    rocket_mass = 15, # kg
     motor = Cesaroni_7579M1520_P,
     Cd_rocket_at_Ma = 0.4,
     h_second_rail_button = 0.8  # m
@@ -111,7 +111,7 @@ The following was the most comprehensive source found for temperature lapse rate
 - the report says that in the western conterminous United States, temperature lapse rates are generally significantly less than the standard -6.5 K/km
 - the report didn't include the date (or month) of the measurements, so I'd assume that it happened in the winter due to the low lapse rates, and/or the data being several decades old means that it's no longer as accurate due to the changing global climate
 - has values for many locations in New Mexico (search for n. mex), and they ranged from -1.4 to -3.9 K/km
-    - the closest station to SC was Datil, which had a lapse rate of -3.1 K/km
+    - the closest station to SA was Datil, which had a lapse rate of -3.1 K/km
 """
 L_launch_rail_ESRA_provided_SAC = 5.18  # m, 
 """ ESRA provides teams with a 5.18m rail at competition """
@@ -167,13 +167,3 @@ default_airbrakes_model = Airbrakes(
     max_deployment_rate = 5,  # deg/s
     max_retraction_rate = 10 # deg/s
 )
-
-if __name__ == "__main__":
-    from rocketflightsim.flight_simulation import simulate_flight
-    from rocketflightsim.tools.plotting_functions import plot_ascent, plot_aerodynamics, plot_airbrakes_ascent
-
-    dataset, liftoff_index, launch_rail_cleared_index, burnout_index, apogee_index = simulate_flight(rocket = example_rocket, launch_conditions = Spaceport_America_avg_launch_conditions, timestep = 0.001)
-    print(f"Motor burnout: \n\tHeight: {dataset['z'].iloc[burnout_index - 1]} m\n\tSpeed: {dataset['airspeed'].iloc[burnout_index - 1]} m/s\n\tTime: {dataset['time'].iloc[burnout_index - 1]} s\n")
-    print(f"Apogee: \n\tHeight: {dataset['z'].iloc[apogee_index - 1]} m\n\tTime: {dataset['time'].iloc[apogee_index - 1]} s\n")
-
-    plot_ascent(dataset['time'], dataset['z'], dataset['airspeed'], dataset['v_z'], dataset['a_z'])

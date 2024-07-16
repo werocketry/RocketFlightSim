@@ -22,11 +22,6 @@ TODO: check that again when done splitting the sim into stages
 """
 
 # TODO split simulator into stages. better for readability, but also for allowing more complex simulations with multiple stages, and going beyond the troposphere with different lapse rates, a different gravity model, and a different wind model. Could even use it for educational purposes like showing the importance of having a launch rail. Might also make it faster not having to store most variables during some stages (nothing stored at all before liftoff, no need to store angle to vertical at each timestep while on launch rail), and not having to re-do significant parts of the simulation when running it multiple times (if looking at how varying wind affects the flightpath, can just sim to launch rail clearance once). Could also make a few things faster and more precise like between ignition and liftoff, instead of timestepping, could solve for the exact time of liftoff.
-def flight_sim_initialization(rocket, launch_conditions):
-    """ returns state vector on the ground before launch - needed? just do in launchconditions init?
-    
-    """
-
 
 def flight_sim_ignition_to_liftoff(rocket, launch_conditions):
     """
@@ -48,6 +43,9 @@ def flight_sim_ignition_to_liftoff(rocket, launch_conditions):
     ----- 
     This implementation assumes linear interpolation of mass and thrust curves. This is reasonable given that the curves should have enough points to be relatively smooth.
     """
+    # TODO: if rocket never produces enough thrust to lift off, raise a custom exception
+    # TODO: later on, add option for hold-down clamps to dictate liftoff_thrust
+    # TODO: add static friction on the rail? kinetic to next function?
     # TODO: account for when keys of engine_thrust_lookup and fuel_mass_lookup aren't aligned
 
     liftoff_thrust_to_mass_ratio = launch_conditions.local_gravity * launch_conditions.cos_rail_angle_to_vertical # move to init of launch_conditions class?
@@ -65,29 +63,48 @@ def flight_sim_ignition_to_liftoff(rocket, launch_conditions):
     post_liftoff_key = next(key for key, thrust in engine_thrust_lookup.items() if thrust > liftoff_thrusts[key])
     # find last key before liftoff
     pre_liftoff_key = max(key for key in engine_thrust_lookup.keys() if key < post_liftoff_key)
+
     # equation of line for thrust between pre_liftoff_key and post_liftoff_key
     thrust_slope = (engine_thrust_lookup[post_liftoff_key] - engine_thrust_lookup[pre_liftoff_key]) / (post_liftoff_key - pre_liftoff_key)
     thrust_intercept = engine_thrust_lookup[pre_liftoff_key] - thrust_slope * pre_liftoff_key
     # equation of line for liftoff_thrusts between pre_liftoff_key and post_liftoff_key
     liftoff_thrust_slope = (liftoff_thrusts[post_liftoff_key] - liftoff_thrusts[pre_liftoff_key]) / (post_liftoff_key - pre_liftoff_key)
     liftoff_thrust_intercept = liftoff_thrusts[pre_liftoff_key] - liftoff_thrust_slope * pre_liftoff_key
+
     # interpolate time of liftoff
     time_of_liftoff = (liftoff_thrust_intercept - thrust_intercept) / (thrust_slope - liftoff_thrust_slope)
-    return time_of_liftoff
 
-    # TODO: if rocket never produces enough thrust to lift off, raise a custom exception
-    # TODO: later on, add option for hold-down clamps to dictate liftoff_thrust
-    # TODO: add static friction on the rail? kinetic to next function?
+    return time_of_liftoff
 
 
 def flight_sim_liftoff_to_rail_clearance(rocket, launch_conditions, t_liftoff, timestep=default_timestep):
-    """ maybe have it just simulate in 1D while on the rail for speed sake, and the output state vector just takes the distance along the rail and converts it to 3D with the elevation angle and rail direction. if tracking the full flightpath, the conversion of each variable can happen outside of this function, with this function just outputting 1D motion
-    
-    note that this could be done in 1 dimension to save computation time, as the change in air properties over the length of the rail is negligible (and if the distance along the rail was taken as height - which it basically is - accounting for the change in air properties that way would mean an even more negligeable difference compared to the real properties). The 1D motion could then be converted to 3D motion after the rocket has cleared the rail. For the sake of consistency, 3D motion is simulated here.
-
-    - in the future, maybe account for effects of wind while on the rail
-    - raise a warning if the rocket doesn't clear the rail before burnout?
     """
+    Simulate the flight of a rocket on a launch rail from the time of liftoff unitl the moment the rocket clears the rail.
+
+    Args
+    ----
+    rocket : Rocket
+        An instance of the Rocket class.
+    launch_conditions : LaunchConditions
+        An instance of the LaunchConditions class.
+    t_liftoff : float
+        Time after ignition at which the rocket lifts off in seconds.
+    timestep : float, optional
+        The time increment for the simulation in seconds.
+
+    Returns
+    -------
+    list
+        aaa
+
+    Notes
+    -----
+    This could be done in 1 dimension to save computation time, given the change in air properties over the length of the rail is negligible. Further, if the distance along the rail was taken as height - which it effectively is given most launch angles are close to vertical - accounting for the change in air properties that way would mean an even more negligeable difference compared to the real properties. The 1D motion could then be converted to 3D motion after the rocket has cleared the rail, given the location at the rail exit is determined by the (effective) length of the rail and the direction it is pointed in. For the sake of consistency, 3D motion is simulated here.
+    """
+    # TODO: in the future, maybe account for effects of wind while on the rail
+    # TODO: raise a warning if the rocket doesn't clear the rail before burnout?
+    # TODO maybe after first implementation, have it determine the exact state (between timesteps) at rail clearance and replace the last state with that
+
     # unpack rail variables
     sin_rail_angle_to_vertical = launch_conditions.sin_rail_angle_to_vertical
     cos_rail_angle_to_vertical = launch_conditions.cos_rail_angle_to_vertical
@@ -173,8 +190,7 @@ def flight_sim_liftoff_to_rail_clearance(rocket, launch_conditions, t_liftoff, t
                 a_z,
             )
         )
-    # TODO maybe after first implementation, have it determine the exact state (between timesteps) at rail clearance and replace the last state with that
-    
+
     return simulated_values
 
 
@@ -182,6 +198,7 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_stat
     """ 
     
     """
+    # TODO maybe after first implementation, have it determine the exact state (between timesteps) at burnout and replace the last state with that
 
     # unpack environmental variables
     launchpad_temp = launch_conditions.launchpad_temp
@@ -267,7 +284,7 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_stat
                 a_z,
             )
         )
-    # TODO maybe after first implementation, have it determine the exact state (between timesteps) at burnout and replace the last state with that
+    
     return simulated_values
 
 
@@ -282,7 +299,7 @@ def flight_sim_burnout_to_apogee(rocket, launch_conditions, initial_state_vector
     launch_conditions : LaunchConditions
         An instance of the LaunchConditions class.
     initial_state_vector : tuple
-        aaa
+        A tuple detailing the state of the rocket at burnout. AAA
     timestep : float, optional
         The time increment for the simulation in seconds.
 
@@ -292,6 +309,8 @@ def flight_sim_burnout_to_apogee(rocket, launch_conditions, initial_state_vector
         aaa
     
     """
+    # TODO maybe after first implementation, have it determine the exact state (between timesteps) at apogee and replace the last state with that
+
     # unpack environmental variables
     launchpad_temp = launch_conditions.launchpad_temp
 
@@ -316,7 +335,7 @@ def flight_sim_burnout_to_apogee(rocket, launch_conditions, initial_state_vector
     v_x = initial_state_vector[2]
     v_y = initial_state_vector[3]
     v_z = initial_state_vector[4]
-    groundspeed = np.sqrt(v_x**2 + v_y**2 + v_z**2)
+    groundspeed = np.sqrt(v_x**2 + v_y**2 + v_z**2) # will be used for AoA
     airspeed = np.sqrt((v_x - 0.2*windspeed_x)**2 + (v_y - 0.2*windspeed_y)**2 + v_z**2)
 
     compass_heading = launch_conditions.launch_rail_direction
@@ -370,7 +389,7 @@ def flight_sim_burnout_to_apogee(rocket, launch_conditions, initial_state_vector
                 a_z,
             )
         )
-    # TODO maybe after first implementation, have it determine the exact state (between timesteps) at apogee and replace the last state with that
+
     return simulated_values
 
 def flight_sim_ignition_to_apogee(rocket, launch_conditions, timestep=default_timestep):
@@ -378,11 +397,15 @@ def flight_sim_ignition_to_apogee(rocket, launch_conditions, timestep=default_ti
     
     """
     t_liftoff = flight_sim_ignition_to_liftoff(rocket, launch_conditions)
+
     flight_to_rail_clearance = flight_sim_liftoff_to_rail_clearance(rocket, launch_conditions, t_liftoff, timestep)
     state_at_rail_clearance = flight_to_rail_clearance[-1]
+
     flight_to_burnout = flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, state_at_rail_clearance, timestep)
     state_at_burnout = flight_to_burnout[-1]
+
     flight_to_apogee = flight_sim_burnout_to_apogee(rocket, launch_conditions, state_at_burnout, timestep)
+
     return flight_to_apogee[-1]
 
 """ combining them. and likely some kind of flagging specific times as key events (needed? at least some of them can be gotten from the launch conditions like burnout (from time), liftoff (first non-zero height), and rail clearance (from rail height))
