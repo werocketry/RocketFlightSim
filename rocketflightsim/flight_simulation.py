@@ -9,404 +9,50 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from . import helper_functions as hfunc
 from . import constants as con
 
-# TODO: see if Numba can speed up the simulation https://numba.pydata.org/
-
 # Default timestep for the simulation
-default_timestep = 0.02
-""" Notes on timesteps:
+default_timestep = con.default_timestep
 
-The default for OpenRocket sims is 0.01s for the first while, and then somewhere between 0.02 and 0.05 for a while, and then 0.05 for most of the rest of the ascent. It simulates more complicated dynamics than we do
-
-A timestep of 0.02s gives apogees a difference of a few feet for a 10k launch compared to using 0.001s. 0.001s can still be used for one-off sims, but when running many sims, 0.02s is better.
-TODO: check that again when done splitting the sim into stages
+# TODO improvements to overall simulator:
+"""
+    - make it easier to do multi-stage rockets? Currently just chain rail_clearance_to_burnout for each additional stage with new rocket and motor objects for additional stages
+    - see if Numba can speed up the simulation https://numba.pydata.org/
+    - consider using different timesteps for different stages
 """
 
-# TODO split simulator into stages. better for readability, but also for allowing more complex simulations with multiple stages, and going beyond the troposphere with different lapse rates, a different gravity model, and a different wind model. Could even use it for educational purposes like showing the importance of having a launch rail. Might also make it faster not having to store most variables during some stages (nothing stored at all before liftoff, no need to store angle to vertical at each timestep while on launch rail), and not having to re-do significant parts of the simulation when running it multiple times (if looking at how varying wind affects the flightpath, can just sim to launch rail clearance once). Could also make a few things faster and more precise like between ignition and liftoff, instead of timestepping, could solve for the exact time of liftoff.
-
-def flight_sim_ignition_to_liftoff(rocket, launch_conditions):
-    """
-    Determine the time after ignition at which a rocket lifts off.
-
-    Args
-    ----
-    rocket : Rocket
-        An instance of the Rocket class.
-    launch_conditions : LaunchConditions
-        An instance of the LaunchConditions class.
-
-    Returns
-    -------
-    float
-        Time after ignition at which the rocket lifts off in seconds.
-
-    Notes
-    ----- 
-    This implementation assumes linear interpolation of mass and thrust curves. This is reasonable given that the curves should have enough points to be relatively smooth.
-    """
-    # TODO: if rocket never produces enough thrust to lift off, raise a custom exception
-    # TODO: later on, add option for hold-down clamps to dictate liftoff_thrust
-    # TODO: add static friction on the rail? kinetic to next function?
-    # TODO: account for when keys of engine_thrust_lookup and fuel_mass_lookup aren't aligned
-
-    liftoff_thrust_to_mass_ratio = launch_conditions.local_gravity * launch_conditions.cos_rail_angle_to_vertical # move to init of launch_conditions class?
-
-    # unpack rocket and launch_conditions
-    dry_mass = rocket.dry_mass
-    fuel_mass_lookup = rocket.motor.fuel_mass_curve
-    engine_thrust_lookup = rocket.motor.thrust_curve
-
-    # calculate needed thrusts at each key in fuel_mass_lookup before burnout
-    masses = [hfunc.mass_at_time(time, dry_mass, fuel_mass_lookup) for time in fuel_mass_lookup.keys() if time < rocket.motor.burn_time]
-    liftoff_thrusts = {key: mass * liftoff_thrust_to_mass_ratio for key, mass in zip(fuel_mass_lookup.keys(), masses)}
-
-    # find the first time when thrust exceeds lifroff thrust
-    post_liftoff_key = next(key for key, thrust in engine_thrust_lookup.items() if thrust > liftoff_thrusts[key])
-    # find last key before liftoff
-    pre_liftoff_key = max(key for key in engine_thrust_lookup.keys() if key < post_liftoff_key)
-
-    # equation of line for thrust between pre_liftoff_key and post_liftoff_key
-    thrust_slope = (engine_thrust_lookup[post_liftoff_key] - engine_thrust_lookup[pre_liftoff_key]) / (post_liftoff_key - pre_liftoff_key)
-    thrust_intercept = engine_thrust_lookup[pre_liftoff_key] - thrust_slope * pre_liftoff_key
-    # equation of line for liftoff_thrusts between pre_liftoff_key and post_liftoff_key
-    liftoff_thrust_slope = (liftoff_thrusts[post_liftoff_key] - liftoff_thrusts[pre_liftoff_key]) / (post_liftoff_key - pre_liftoff_key)
-    liftoff_thrust_intercept = liftoff_thrusts[pre_liftoff_key] - liftoff_thrust_slope * pre_liftoff_key
-
-    # interpolate time of liftoff
-    time_of_liftoff = (liftoff_thrust_intercept - thrust_intercept) / (thrust_slope - liftoff_thrust_slope)
-
-    return time_of_liftoff
-
-
-def flight_sim_liftoff_to_rail_clearance(rocket, launch_conditions, t_liftoff, timestep=default_timestep):
-    """
-    Simulate the flight of a rocket on a launch rail from the time of liftoff unitl the moment the rocket clears the rail.
-
-    Args
-    ----
-    rocket : Rocket
-        An instance of the Rocket class.
-    launch_conditions : LaunchConditions
-        An instance of the LaunchConditions class.
-    t_liftoff : float
-        Time after ignition at which the rocket lifts off in seconds.
-    timestep : float, optional
-        The time increment for the simulation in seconds.
-
-    Returns
-    -------
-    list
-        aaa
-
-    Notes
-    -----
-    This could be done in 1 dimension to save computation time, given the change in air properties over the length of the rail is negligible. Further, if the distance along the rail was taken as height - which it effectively is given most launch angles are close to vertical - accounting for the change in air properties that way would mean an even more negligeable difference compared to the real properties. The 1D motion could then be converted to 3D motion after the rocket has cleared the rail, given the location at the rail exit is determined by the (effective) length of the rail and the direction it is pointed in. For the sake of consistency, 3D motion is simulated here.
-    """
-    # TODO: in the future, maybe account for effects of wind while on the rail
-    # TODO: raise a warning if the rocket doesn't clear the rail before burnout?
-    # TODO maybe after first implementation, have it determine the exact state (between timesteps) at rail clearance and replace the last state with that
-
-    # unpack rail variables
-    sin_rail_angle_to_vertical = launch_conditions.sin_rail_angle_to_vertical
-    cos_rail_angle_to_vertical = launch_conditions.cos_rail_angle_to_vertical
-
-    sin_launch_rail_direction = launch_conditions.sin_launch_rail_direction
-    cos_launch_rail_direction = launch_conditions.cos_launch_rail_direction
-
-    effective_L_launch_rail = launch_conditions.L_launch_rail - rocket.h_second_rail_button
-    effective_h_launch_rail = effective_L_launch_rail * cos_rail_angle_to_vertical
-
-    # unpack environmental variables
-    launchpad_temp = launch_conditions.launchpad_temp
-
-    T_lapse_rate = launch_conditions.local_T_lapse_rate
-    F_gravity = launch_conditions.local_gravity
-
-    multiplier = launch_conditions.density_multiplier
-    exponent = launch_conditions.density_exponent
-
-    # unpack rocket variables
-    dry_mass = rocket.dry_mass
-    fuel_mass_lookup = rocket.motor.fuel_mass_curve
-    engine_thrust_lookup = rocket.motor.thrust_curve
-    Cd_A_rocket_fn = rocket.Cd_A_rocket
-
-    # initialize simulation variables
-    time = t_liftoff
-    # x = 0
-    # y = 0
-    z = 0
-    v_x = 0
-    v_y = 0
-    v_z = 0
-    airspeed = 0
-
-    # simulate flight from liftoff until the launch rail is cleared
-    simulated_values = []
-
-    while z < effective_h_launch_rail:
-        # update air properties based on height
-        temperature = hfunc.temp_at_altitude(z, launchpad_temp, lapse_rate = T_lapse_rate)
-        air_density = hfunc.air_density_optimized(temperature, multiplier, exponent)
-
-        # calculate mach number, drag coefficient, and forces
-        Ma = hfunc.mach_number_fn(airspeed, temperature)
-        Cd_A_rocket = Cd_A_rocket_fn(Ma)
-        q = hfunc.calculate_dynamic_pressure(air_density, airspeed)
-        F_drag = q * Cd_A_rocket
-
-        # update rocket's motion parameters
-        mass = hfunc.mass_at_time(time, dry_mass, fuel_mass_lookup)
-        thrust = hfunc.thrust_at_time(time, engine_thrust_lookup)
-        a_rail = (thrust - F_drag) / mass - F_gravity * cos_rail_angle_to_vertical
-
-        a_x = a_rail * sin_rail_angle_to_vertical * sin_launch_rail_direction
-        a_y = a_rail * sin_rail_angle_to_vertical * cos_launch_rail_direction
-        a_z = a_rail * cos_rail_angle_to_vertical
-
-        v_x += a_x * timestep
-        v_y += a_y * timestep
-        v_z += a_z * timestep
-
-        groundspeed = np.sqrt(v_x**2 + v_y**2 + v_z**2)
-        airspeed = groundspeed # take out if not simulating effects of wind while on rail
-
-        # add x and y after finishing implementation and comparing speed to old version
-        z += v_z * timestep
-
-        time += timestep
-
-        # append updated simulation values
-        simulated_values.append(
-            (
-                time,
-                # x,
-                # y,
-                z,
-                v_x,
-                v_y,
-                v_z,
-                a_x,
-                a_y,
-                a_z,
-            )
-        )
-
-    return simulated_values
-
-
-def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_state_vector, timestep=default_timestep):
-    """ 
-    
-    """
-    # TODO maybe after first implementation, have it determine the exact state (between timesteps) at burnout and replace the last state with that
-
-    # unpack environmental variables
-    launchpad_temp = launch_conditions.launchpad_temp
-
-    T_lapse_rate = launch_conditions.local_T_lapse_rate
-    F_gravity = launch_conditions.local_gravity
-
-    multiplier = launch_conditions.density_multiplier
-    exponent = launch_conditions.density_exponent
-
-    mean_wind_speed = launch_conditions.mean_wind_speed
-    wind_heading = launch_conditions.wind_heading
-    windspeed_x = mean_wind_speed * np.sin(wind_heading)
-    windspeed_y = mean_wind_speed * np.cos(wind_heading)
-
-    # unpack rocket variables
-    dry_mass = rocket.dry_mass
-    fuel_mass_lookup = rocket.motor.fuel_mass_curve
-    engine_thrust_lookup = rocket.motor.thrust_curve
-    Cd_A_rocket_fn = rocket.Cd_A_rocket
-    burnout_time = rocket.motor.burn_time
-
-    # unpack simulation variables
-    time = initial_state_vector[0]
-    z = initial_state_vector[1]
-    v_x = initial_state_vector[2]
-    v_y = initial_state_vector[3]
-    v_z = initial_state_vector[4]
-    groundspeed = np.sqrt(v_x**2 + v_y**2 + v_z**2) # for comparing to airspeed to get AoA at clearance, eventually make a better way to have it fly with a small AoA for the first little bit
-    airspeed = np.sqrt((v_x - 0.2*windspeed_x)**2 + (v_y - 0.2*windspeed_y)**2 + v_z**2)
-
-    compass_heading = launch_conditions.launch_rail_direction
-    angle_to_vertical = launch_conditions.angle_to_vertical
-
-    # simulate flight from launch rail clearance until motor burnout
-    simulated_values = []
-
-    while time < burnout_time:
-        # update air properties based on height
-        temperature = hfunc.temp_at_altitude(z, launchpad_temp, lapse_rate = T_lapse_rate)
-        air_density = hfunc.air_density_optimized(temperature, multiplier, exponent)
-
-        # calculate Mach number, drag coefficient, and forces
-        Ma = hfunc.mach_number_fn(airspeed, temperature)
-        Cd_A_rocket = Cd_A_rocket_fn(Ma)
-        q = hfunc.calculate_dynamic_pressure(air_density, airspeed)
-        F_drag = q * Cd_A_rocket
-
-        # update rocket's motion parameters
-        mass = hfunc.mass_at_time(time, dry_mass, fuel_mass_lookup)
-        thrust = hfunc.thrust_at_time(time, engine_thrust_lookup)
-        
-        a_x = (thrust - F_drag) * np.sin(angle_to_vertical) / mass * (np.sin(compass_heading))
-        a_y = (thrust - F_drag) * np.sin(angle_to_vertical) / mass * (np.cos(compass_heading))
-        a_z = (thrust - F_drag) * np.cos(angle_to_vertical) / mass - F_gravity
-
-        v_x += a_x * timestep
-        v_y += a_y * timestep
-        v_z += a_z * timestep
-
-        # add x and y after finishing implementation and comparing speed to old version
-        z += v_z * timestep
-
-        # determine new headings
-        airspeed = np.sqrt((v_x - 0.2*windspeed_x)**2 + (v_y - 0.2*windspeed_y)**2 + v_z**2)
-        compass_heading = np.arctan(v_x / v_y)
-        angle_to_vertical = np.arccos(v_z / airspeed)
-
-        time += timestep
-
-        # append updated simulation values
-        simulated_values.append(
-            (
-                time,
-                # x,
-                # y,
-                z,
-                v_x,
-                v_y,
-                v_z,
-                a_x,
-                a_y,
-                a_z,
-            )
-        )
-    
-    return simulated_values
-
-
-def flight_sim_burnout_to_apogee(rocket, launch_conditions, initial_state_vector, timestep=default_timestep):
-    """
-    Simulate a rocket's flight from the time of motor burnout until apogee.
-
-    Args
-    ----
-    rocket : Rocket
-        An instance of the Rocket class.
-    launch_conditions : LaunchConditions
-        An instance of the LaunchConditions class.
-    initial_state_vector : tuple
-        A tuple detailing the state of the rocket at burnout. AAA
-    timestep : float, optional
-        The time increment for the simulation in seconds.
-
-    Returns
-    -------
-    list
-        aaa
-    
-    """
-    # TODO maybe after first implementation, have it determine the exact state (between timesteps) at apogee and replace the last state with that
-
-    # unpack environmental variables
-    launchpad_temp = launch_conditions.launchpad_temp
-
-    T_lapse_rate = launch_conditions.local_T_lapse_rate
-    F_gravity = launch_conditions.local_gravity
-
-    multiplier = launch_conditions.density_multiplier
-    exponent = launch_conditions.density_exponent
-
-    mean_wind_speed = launch_conditions.mean_wind_speed
-    wind_heading = launch_conditions.wind_heading
-    windspeed_x = mean_wind_speed * np.sin(wind_heading)
-    windspeed_y = mean_wind_speed * np.cos(wind_heading)
-
-    # unpack rocket variables
-    mass = rocket.dry_mass
-    Cd_A_rocket_fn = rocket.Cd_A_rocket
-
-    # unpack simulation variables
-    time = initial_state_vector[0]
-    z = initial_state_vector[1]
-    v_x = initial_state_vector[2]
-    v_y = initial_state_vector[3]
-    v_z = initial_state_vector[4]
-    groundspeed = np.sqrt(v_x**2 + v_y**2 + v_z**2) # will be used for AoA
-    airspeed = np.sqrt((v_x - 0.2*windspeed_x)**2 + (v_y - 0.2*windspeed_y)**2 + v_z**2)
-
-    compass_heading = launch_conditions.launch_rail_direction
-    angle_to_vertical = launch_conditions.angle_to_vertical
-
-    # simulate flight from launch rail clearance until motor burnout
-    simulated_values = []
-
-    while v_z > 0:
-        # update air properties based on height
-        temperature = hfunc.temp_at_altitude(z, launchpad_temp, lapse_rate = T_lapse_rate)
-        air_density = hfunc.air_density_optimized(temperature, multiplier, exponent)
-
-        # calculate Mach number, drag coefficient, and forces
-        Ma = hfunc.mach_number_fn(airspeed, temperature)
-        Cd_A_rocket = Cd_A_rocket_fn(Ma)
-        q = hfunc.calculate_dynamic_pressure(air_density, airspeed)
-        F_drag = q * Cd_A_rocket
-
-        # update rocket's motion parameters
-        a_x = -F_drag * np.sin(angle_to_vertical) / mass * np.sin(compass_heading)
-        a_y = -F_drag * np.sin(angle_to_vertical) / mass * np.cos(compass_heading)
-        a_z = -F_drag * np.cos(angle_to_vertical) / mass - F_gravity
-
-        v_x += a_x * timestep
-        v_y += a_y * timestep
-        v_z += a_z * timestep
-
-        # add x and y after finishing implementation and comparing speed to old version
-        z += v_z * timestep
-
-        # determine new headings
-        airspeed = np.sqrt((v_x - windspeed_x)**2 + (v_y - windspeed_y)**2 + v_z**2)
-        compass_heading = np.arctan(v_x / v_y)
-        angle_to_vertical = np.arccos(v_z / airspeed)
-
-        time += timestep
-
-        # append updated simulation values
-        simulated_values.append(
-            (
-                time,
-                # x,
-                # y,
-                z,
-                v_x,
-                v_y,
-                v_z,
-                a_x,
-                a_y,
-                a_z,
-            )
-        )
-
-    return simulated_values
+# TODO split simulator into stages. better for readability, but also for allowing more complex simulations with multiple stages, and going beyond the troposphere with different lapse rates, a different gravity model, and a different wind model. Could even use it for educational purposes like showing the importance of having a launch rail. Also makes it faster not having to store most variables during some stages (nothing stored at all before liftoff, no need to store angle to vertical at each timestep while on launch rail), and not having to re-do significant parts of the simulation when running it multiple times (if looking at how varying wind affects the flightpath, can just sim to launch rail clearance once). Could also make a few things faster and more precise like between ignition and liftoff, instead of timestepping, could solve for the exact time of liftoff.
+
+from .ignition_to_liftoff import flight_sim_ignition_to_liftoff
+from .liftoff_to_rail_clearance import flight_sim_liftoff_to_rail_clearance
+from .rail_clearance_to_burnout import flight_sim_rail_clearance_to_burnout
+from .burnout_to_apogee import flight_sim_burnout_to_apogee
 
 def flight_sim_ignition_to_apogee(rocket, launch_conditions, timestep=default_timestep):
     """
-    
+    Simulate the flight of a rocket from ignition to apogee given its specifications and launch conditions.
+
+    Args
+    ----
+    rocket : Rocket
+        An instance of the Rocket class.
+    launch_conditions : LaunchConditions
+        An instance of the LaunchConditions class.
+    timestep : float, optional
+        The time increment for the simulation in seconds.
+
+    Returns
+    -------
+    list
+        aaa
     """
     t_liftoff = flight_sim_ignition_to_liftoff(rocket, launch_conditions)
 
-    flight_to_rail_clearance = flight_sim_liftoff_to_rail_clearance(rocket, launch_conditions, t_liftoff, timestep)
-    state_at_rail_clearance = flight_to_rail_clearance[-1]
+    state_at_rail_clearance = flight_sim_liftoff_to_rail_clearance(rocket, launch_conditions, t_liftoff, timestep) [-1]
 
-    flight_to_burnout = flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, state_at_rail_clearance, timestep)
-    state_at_burnout = flight_to_burnout[-1]
+    state_at_burnout = flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, state_at_rail_clearance, timestep)[-1]
 
-    flight_to_apogee = flight_sim_burnout_to_apogee(rocket, launch_conditions, state_at_burnout, timestep)
+    state_at_apogee = flight_sim_burnout_to_apogee(rocket, launch_conditions, state_at_burnout, timestep)[-1]
 
-    return flight_to_apogee[-1]
+    return state_at_apogee
 
 """ combining them. and likely some kind of flagging specific times as key events (needed? at least some of them can be gotten from the launch conditions like burnout (from time), liftoff (first non-zero height), and rail clearance (from rail height))
 
@@ -431,7 +77,7 @@ key events:
 """
 
 
-# move airbrakes sims to another file?
+# TODO: move airbrakes sims to another file
 
 # Flight simulation
 def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
@@ -741,7 +387,6 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
         burnout_index,
         apogee_index
     )
-
 
 # Flight simulation with airbrakes - max deployment
 def simulate_airbrakes_flight_max_deployment(pre_brake_flight, rocket, launch_conditions, airbrakes, timestep = default_timestep):

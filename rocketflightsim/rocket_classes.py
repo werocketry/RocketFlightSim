@@ -53,7 +53,7 @@ class Motor:
         self.thrust_curve = thrust_curve
 
         self.total_impulse = np.trapz(list(thrust_curve.values()), list(thrust_curve.keys())) # TODO: not important for this in and of itself, but for future additions, look at difference between using numpy.trapz and scipy.integrate.trapz or even other integration functions
-        # TODO: maybe add a test for the simulator function to see if total impulse was added to the rocket's dry mass in the first instant after ignition, it would give a higher max acceleration than the simulator predicts
+        # TODO: maybe make it only calculate total impulse if it's called on, as it slows down the sim a little
         self.burn_time = max(thrust_curve.keys())
         # TODO: add burn efficiency, some propelant mass (~2-5% ?) becomes dry mass (can just assign it to dry mass at the start of the sim/at class init)
         if fuel_mass_curve:
@@ -209,11 +209,11 @@ class LaunchConditions:
     wind_heading : float
         Direction the (mean) wind is headed towards (rad). 0 is north, π/2 is east, π is south, 3π/2 is west.
     """
-    # TODO: have it calculate the atmospheric conditions on the ground in init
-    # TODO: maybe incorporate air humidity?
+    # TODO: maybe incorporate air humidity
     # TODO: move rail trig calculations here
-    # TODO: move launch rail attributes to a separate class, maybe contained inside this one? More for organization than anything else. Maybe rename this one LaunchEnvironment or something similar
+    # TODO: move launch rail attributes to a separate class (called Launchpad?), maybe contained inside this one? More for organization than anything else. Maybe rename this one LaunchEnvironment or something similar
     # TODO: would it make sense to make the air density function a method of this class?
+    # TODO: more advanced atmospheric model (particularly non-static lapse rate, also look at varying gravity again, would be cool to sim something like a Saturn V) for rockets flying beyond the troposphere
     def __init__(
         self, 
         launchpad_pressure : float,

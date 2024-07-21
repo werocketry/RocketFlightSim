@@ -26,10 +26,5 @@ class TestFlightSimulationTheoreticalMaxs(unittest.TestCase):
                 assert difference > 0
 
                 max_acceleration_theoretical = max_theoretical_accel_motor(rocket = flight.rocket, launch_conditions = flight.launch_conditions)
-                # TODO: max_acceleration_simulated = 
-                
-
-                # maybe add apogee if max theoretical added to the tool
-                apogee_simulated = dataset["z"].iloc[apogee_index - 1]
                 
             print("\n--------------------")

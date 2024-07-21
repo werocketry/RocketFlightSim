@@ -158,6 +158,8 @@ Spaceport_America_avg_launch_conditions = LaunchConditions(
     altitude = altitude_SA
 )
 
+# TODO: add avg conditions for Launch Canada
+
 # Default airbrakes model
 default_airbrakes_model = Airbrakes(
     num_flaps = 3,
