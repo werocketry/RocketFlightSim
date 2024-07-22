@@ -22,7 +22,6 @@ def flight_sim_burnout_to_apogee(rocket, launch_conditions, initial_state_vector
     -------
     list
         aaa
-    
     """
     # TODO maybe after first implementation, have it determine the exact state (between timesteps) at apogee and replace the last state with that
 
@@ -64,7 +63,7 @@ def flight_sim_burnout_to_apogee(rocket, launch_conditions, initial_state_vector
         temperature = hfunc.temp_at_altitude(z, launchpad_temp, lapse_rate = T_lapse_rate)
         air_density = hfunc.air_density_optimized(temperature, multiplier, exponent)
 
-        # calculate Mach number, drag coefficient, and forces
+        # calculate drag force
         Ma = hfunc.mach_number_fn(airspeed, temperature)
         Cd_A_rocket = Cd_A_rocket_fn(Ma)
         q = hfunc.calculate_dynamic_pressure(air_density, airspeed)

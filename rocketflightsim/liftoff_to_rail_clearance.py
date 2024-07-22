@@ -74,7 +74,7 @@ def flight_sim_liftoff_to_rail_clearance(rocket, launch_conditions, t_liftoff, t
         temperature = hfunc.temp_at_altitude(z, launchpad_temp, lapse_rate = T_lapse_rate)
         air_density = hfunc.air_density_optimized(temperature, multiplier, exponent)
 
-        # calculate mach number, drag coefficient, and forces
+        # calculate drag force
         Ma = hfunc.mach_number_fn(airspeed, temperature)
         Cd_A_rocket = Cd_A_rocket_fn(Ma)
         q = hfunc.calculate_dynamic_pressure(air_density, airspeed)

@@ -16,7 +16,7 @@ default_timestep = con.default_timestep
 """
     - make it easier to do multi-stage rockets? Currently just chain rail_clearance_to_burnout for each additional stage with new rocket and motor objects for additional stages
     - see if Numba can speed up the simulation https://numba.pydata.org/
-    - consider using different timesteps for different stages
+    - consider using different default timesteps for different stages
 """
 
 # TODO split simulator into stages. better for readability, but also for allowing more complex simulations with multiple stages, and going beyond the troposphere with different lapse rates, a different gravity model, and a different wind model. Could even use it for educational purposes like showing the importance of having a launch rail. Also makes it faster not having to store most variables during some stages (nothing stored at all before liftoff, no need to store angle to vertical at each timestep while on launch rail), and not having to re-do significant parts of the simulation when running it multiple times (if looking at how varying wind affects the flightpath, can just sim to launch rail clearance once). Could also make a few things faster and more precise like between ignition and liftoff, instead of timestepping, could solve for the exact time of liftoff.
@@ -77,7 +77,7 @@ key events:
 """
 
 
-# TODO: move airbrakes sims to another file
+# TODO: replace all old combined functions
 
 # Flight simulation
 def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
@@ -176,7 +176,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
                 angle_to_vertical,
             ]
         )
-    print(time)
+
     liftoff_index = len(simulated_values)
 
     # Liftoff until launch rail cleared

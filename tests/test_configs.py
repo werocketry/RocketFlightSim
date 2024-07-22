@@ -948,3 +948,12 @@ Could diagnose more by comparing plots of data from the flight computer to plots
 """
 
 past_flights = [NDRT_2020_flight, Valetudo_flight, Juno3_flight, Bella_Lui_flight]
+
+default_airbrakes_model = Airbrakes(
+    num_flaps = 3,
+    A_flap = 0.004,  # m^2  flap area
+    Cd_brakes = 1,
+    max_deployment_angle = 45,  # deg
+    max_deployment_rate = 5,  # deg/s
+    max_retraction_rate = 10 # deg/s
+)

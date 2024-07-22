@@ -387,11 +387,13 @@ class Flightpath:
 class PastFlight ():
     """
     Stores the rocket, launch conditions, and apogee of a past flight
-    likely add more things like max speed, max acceleration later. Also the option to feed a full flightpath, good for comparisons of sim projection to actual flightpaths
+    likely add the option to feed a full flightpath, good for comparisons of sim projection to actual flightpaths
     """
 
-    def __init__(self, rocket, launch_conditions, apogee = None, name = None):
+    def __init__(self, rocket, launch_conditions, apogee = None, max_speed = None, max_accel = None, name = None):
         self.rocket = rocket
         self.launch_conditions = launch_conditions
         self.apogee = apogee
+        self.max_speed = max_speed
+        self.max_accel = max_accel
         self.name = name

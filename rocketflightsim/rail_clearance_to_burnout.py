@@ -50,7 +50,7 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_stat
         temperature = hfunc.temp_at_altitude(z, launchpad_temp, lapse_rate = T_lapse_rate)
         air_density = hfunc.air_density_optimized(temperature, multiplier, exponent)
 
-        # calculate Mach number, drag coefficient, and forces
+        # calculate drag force
         Ma = hfunc.mach_number_fn(airspeed, temperature)
         Cd_A_rocket = Cd_A_rocket_fn(Ma)
         q = hfunc.calculate_dynamic_pressure(air_density, airspeed)

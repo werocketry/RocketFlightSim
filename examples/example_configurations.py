@@ -134,7 +134,7 @@ latitude_SA = 32.99  # deg, Spaceport America's latitude
 altitude_SA = 1401  # m, Spaceport America's elevation
 """ https://www.spaceportamerica.com/faq/#toggle-id-15 """
 launch_rail_elevation_SAC = 86  # deg from horizontal
-""" How the standard launch angle at Spaceport America Cup was determined
+""" Notes on the standard launch angle at Spaceport America Cup
 
 ESRA changed it to 86° for 2024, as noted in the forum:
 https://www.herox.com/SpaceportAmericaCup2024/forum/thread/11118
@@ -144,6 +144,7 @@ Teams have noted that they've been told to use angles at least as low as 80°. T
 Previously, the standard launch angle was 84°, as noted in the DTEG:
 DTEG 10.1.1: 
     > Launch vehicles will nominally launch at an elevation angle of 84° ±1°
+
 DTEG 10.1.2:
     > Range Safety Officers reserve the right to require certain vehicles’ launch elevation be lower or higher if flight safety issues are identified during pre-launch activities
 """
