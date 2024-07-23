@@ -57,7 +57,7 @@ def flight_sim_liftoff_to_rail_clearance(rocket, launch_conditions, t_liftoff, t
     Cd_A_rocket_fn = rocket.Cd_A_rocket
 
     # initialize simulation variables
-    time = t_liftoff
+    time = t_liftoff # TODO: add half a timestep? In general, go through start and end steps at each flight phase function
     # x = 0
     # y = 0
     z = 0

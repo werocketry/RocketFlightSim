@@ -4,8 +4,9 @@ from . import helper_functions as hfunc
 from . import constants as con
 
 # TODO: if rocket never produces enough thrust to lift off, raise a custom exception
-# TODO: later on, add option for hold-down clamps to dictate liftoff_thrust
+# TODO: add option for hold-down clamps to dictate liftoff_thrust - have constant stored in launch conditions class, along with liftoff_thrust_to_mass_ratio
 # TODO: add static friction on the rail? kinetic to next function?
+    # for μ ~ 0.7, F_N = m * g * sin(θ_to_vertical) ~ m * 0.8, F_fric ~ m/2 ~ 10 N for Prometheus/Hyperion, very minor. Change in takeoff time would be in the tens of milliseconds at most?
 # TODO: account for when keys of engine_thrust_lookup and fuel_mass_lookup aren't aligned
 
 def flight_sim_ignition_to_liftoff(rocket, launch_conditions):

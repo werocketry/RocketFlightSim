@@ -1,7 +1,7 @@
 import numpy as np
 from . import constants as con
 
-# aerodynamics
+# atmospheric conditions
 def temp_at_altitude(h, launchpad_temp, lapse_rate = con.T_lapse_rate):
     """
     Calculate the temperature at a given altitude above a reference point. Within the troposphere, temperature decreases linearly with increasing altitude at a rate known as the lapse rate. The lapse rate is typically around 6.5 degrees Celsius per kilometer. 
@@ -60,6 +60,7 @@ def air_density_optimized(temp, multiplier, exponent):
     """
     return multiplier * pow(temp, exponent)
 
+# aerodynamics
 def calculate_dynamic_pressure(air_density, speed):
     """
     Calculate the dynamic pressure imparted on a solid moving through a fluid.
@@ -242,6 +243,7 @@ def mass_at_time(time, dry_mass, fuel_mass_lookup):
     lower_mass = fuel_mass_lookup[lower_time]
     upper_mass = fuel_mass_lookup[upper_time]
     return (dry_mass + lower_mass + (time - lower_time) * (upper_mass - lower_mass) / (upper_time - lower_time))
+
 def thrust_at_time(time, engine_thrust_lookup): 
     """
     Calculate the thrust of the rocket engine at a given time during motor burn.

@@ -17,6 +17,7 @@ default_timestep = con.default_timestep
     - make it easier to do multi-stage rockets? Currently just chain rail_clearance_to_burnout for each additional stage with new rocket and motor objects for additional stages
     - see if Numba can speed up the simulation https://numba.pydata.org/
     - consider using different default timesteps for different stages
+    - add descent dynamics - quick and dirty first descent_under_chute function
 """
 
 # TODO split simulator into stages. better for readability, but also for allowing more complex simulations with multiple stages, and going beyond the troposphere with different lapse rates, a different gravity model, and a different wind model. Could even use it for educational purposes like showing the importance of having a launch rail. Also makes it faster not having to store most variables during some stages (nothing stored at all before liftoff, no need to store angle to vertical at each timestep while on launch rail), and not having to re-do significant parts of the simulation when running it multiple times (if looking at how varying wind affects the flightpath, can just sim to launch rail clearance once). Could also make a few things faster and more precise like between ignition and liftoff, instead of timestepping, could solve for the exact time of liftoff.
@@ -395,7 +396,7 @@ def simulate_airbrakes_flight_max_deployment(pre_brake_flight, rocket, launch_co
 
     Args
     ----
-    - pre_brake_flight (DataFrame): A DataFrame containing the simulation results from the rocket's ascent until burnout. # TODO: change to a tuple of the dataset at the time to start the simulation with airbrakes. Maybe also sim from launch if not given
+    - pre_brake_flight (DataFrame): A DataFrame containing the simulation results from the rocket's ascent until burnout.
     - rocket (Rocket): An instance of the Rocket class.
     - launch_conditions (LaunchConditions): An instance of the LaunchConditions class.
     - airbrakes (Airbrakes): An instance of the Airbrakes class.
