@@ -4,8 +4,24 @@ from . import helper_functions as hfunc
 from . import constants as con
 
 def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_state_vector, timestep = con.default_timestep):
-    """ 
-    
+    """
+    Simulate the flight of a rocket from the moment of launch rail clearance until motor burnout.
+
+    Args
+    ----
+    rocket : Rocket
+        An instance of the Rocket class.
+    launch_conditions : LaunchConditions
+        An instance of the LaunchConditions class.
+    initial_state_vector : tuple
+        A tuple detailing the state of the rocket at launch rail clearance. AAA
+    timestep : float
+        The time increment for the simulation in seconds.
+
+    Returns
+    -------
+    list
+        aaa
     """
     # TODO maybe after first implementation, have it determine the exact state (between timesteps) at burnout and replace the last state with that
 

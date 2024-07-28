@@ -204,6 +204,9 @@ class LaunchConditions:
     cos_launch_rail_direction : float
         Cosine of the direction of the launch rail.
 
+    liftoff_thrust_to_mass_ratio : float
+        AAA
+
     mean_wind_speed : float
         Mean wind speed relative to the ground (m/s).
     wind_heading : float
@@ -283,6 +286,8 @@ class LaunchConditions:
         self.angle_to_vertical = np.deg2rad(90 - launch_rail_elevation)
         self.sin_rail_angle_to_vertical = np.sin(self.angle_to_vertical)
         self.cos_rail_angle_to_vertical = np.cos(self.angle_to_vertical)
+
+        self.liftoff_thrust_to_mass_ratio = self.local_gravity * self.cos_rail_angle_to_vertical
 
         self.mean_wind_speed = mean_wind_speed
         self.wind_heading = np.deg2rad(wind_heading)

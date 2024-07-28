@@ -217,7 +217,7 @@ def calculate_reynolds_number(air_density, speed, len_characteristic, dynamic_vi
     """
     return (air_density * speed * len_characteristic) / dynamic_viscosity
 
-# motor burn curves
+# motor burn curves TODO: look at improving efficiency
     # both likely to either not be used in simulator on the MCU (precompute thrusts and masses at each time given a chosen timestep), or to be rewritten to be more efficient
 def mass_at_time(time, dry_mass, fuel_mass_lookup):
     """
