@@ -21,7 +21,7 @@ def flight_sim_liftoff_to_rail_clearance(rocket, launch_conditions, t_liftoff, t
     Returns
     -------
     list
-        aaa
+        A list of tuples containing the state of the rocket at each timestep. Each tuple contains the time, x, y, z, v_x, v_y, v_z, a_x, a_y, and a_z of the rocket at that time.
 
     Notes
     -----
@@ -97,6 +97,8 @@ def flight_sim_liftoff_to_rail_clearance(rocket, launch_conditions, t_liftoff, t
         airspeed = groundspeed # take out if not simulating effects of wind while on rail
 
         # add x and y after finishing implementation and comparing speed to old version
+        # x += v_x * timestep
+        # y += v_y * timestep
         z += v_z * timestep
 
         time += timestep

@@ -17,6 +17,7 @@ default_timestep = con.default_timestep
     - make it easier to do multi-stage rockets? Currently just chain rail_clearance_to_burnout for each additional stage with new rocket and motor objects for additional stages
     - see if Numba can speed up the simulation https://numba.pydata.org/
     - consider using different default timesteps for different stages
+        - consider a full-on adaptive timestep system like ork has
     - add descent dynamics - quick and dirty first descent_under_chute function
 """
 

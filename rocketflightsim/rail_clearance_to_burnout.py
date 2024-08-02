@@ -21,7 +21,7 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_stat
     Returns
     -------
     list
-        aaa
+        A list of tuples containing the state of the rocket at each timestep. Each tuple contains the time, x, y, z, v_x, v_y, v_z, a_x, a_y, and a_z of the rocket at that time.
     """
     # TODO maybe after first implementation, have it determine the exact state (between timesteps) at burnout and replace the last state with that
 
@@ -48,6 +48,8 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_stat
 
     # unpack simulation variables
     time = initial_state_vector[0]
+    # x = initial_state_vector[1]
+    # y = initial_state_vector[2]
     z = initial_state_vector[1]
     v_x = initial_state_vector[2]
     v_y = initial_state_vector[3]
@@ -85,6 +87,8 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_stat
         v_z += a_z * timestep
 
         # add x and y after finishing implementation and comparing speed to old version
+        # x += v_x * timestep
+        # y += v_y * timestep
         z += v_z * timestep
 
         # determine new headings
