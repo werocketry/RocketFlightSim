@@ -1,33 +1,34 @@
 import sys
 import os
+from copy import deepcopy
 import numpy as np
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import unittest
 
-from rocketflightsim.ignition_to_liftoff import flight_sim_ignition_to_liftoff
-from rocketflightsim.liftoff_to_rail_clearance import flight_sim_liftoff_to_rail_clearance
-from rocketflightsim.rail_clearance_to_burnout import flight_sim_rail_clearance_to_burnout
-from rocketflightsim.burnout_to_apogee import flight_sim_burnout_to_apogee
+from rocketflightsim.flight_sim_ignition_to_liftoff import sim_ignition_to_liftoff
+from rocketflightsim.flight_sim_guided import sim_liftoff_to_rail_clearance
+from rocketflightsim.flight_sim_unguided_boost import sim_unguided_boost
+from rocketflightsim.flight_sim_coast import sim_coast_to_apogee
 
 from .test_configs import past_flights
 
-class TestBurnoutToApogee(unittest.TestCase):
-    def test_burnout_to_apogee(self):
-        print("\nTesting burnout to apogee function...")
+class TestSimCoastToApogee(unittest.TestCase):
+    def test_sim_coast_to_apogee(self):
+        print("\nTesting coast to apogee function...")
 
-        for past_flight in past_flights:
+        for past_flight in deepcopy(past_flights):
             print(f'For rocket: {past_flight.name}')
 
-            t_liftoff = flight_sim_ignition_to_liftoff(past_flight.rocket, past_flight.launch_conditions)
+            t_liftoff = sim_ignition_to_liftoff(past_flight.rocket, past_flight.environment, past_flight.launchpad)
 
-            rail_clearance_state = flight_sim_liftoff_to_rail_clearance(past_flight.rocket, past_flight.launch_conditions, t_liftoff)[-1]
+            rail_clearance_state = sim_liftoff_to_rail_clearance(past_flight.rocket, past_flight.environment, past_flight.launchpad, t_liftoff)[-1]
 
-            burnout_state = flight_sim_rail_clearance_to_burnout(past_flight.rocket, past_flight.launch_conditions, rail_clearance_state)[-1]
+            burnout_state = sim_unguided_boost(past_flight.rocket, past_flight.environment, rail_clearance_state)[-1]
 
-            apogee_state = flight_sim_burnout_to_apogee(past_flight.rocket, past_flight.launch_conditions, burnout_state)[-1]
+            apogee_state = sim_coast_to_apogee(past_flight.rocket, past_flight.environment, burnout_state)[-1]
 
-            apogee_simulated = apogee_state[1]
+            apogee_simulated = apogee_state[3]
             apogee_actual = past_flight.apogee
             difference = apogee_simulated - apogee_actual
             proportional_difference = difference / apogee_actual

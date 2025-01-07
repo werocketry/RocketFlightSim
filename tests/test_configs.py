@@ -5,7 +5,13 @@ import os
 import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from rocketflightsim.rocket_classes import Motor, Rocket, LaunchConditions, Airbrakes, PastFlight
+from rocketflightsim.classes.motor import Motor
+from rocketflightsim.classes.rocket import Rocket
+from rocketflightsim.classes.environment import Environment
+from rocketflightsim.classes.launchpad import Launchpad
+from rocketflightsim.classes.airbrakes import Airbrakes
+from rocketflightsim.classes.parachute import Parachute
+from rocketflightsim.rocket_classes import PastFlight
 
 """ Notre Dame Rocket Team Rocket 2020
 https://github.com/RocketPy-Team/RocketPy/blob/master/docs/examples/ndrt_2020_flight_sim.ipynb
@@ -53,21 +59,29 @@ NDRT_2020_rocket = Rocket(
     A_rocket = np.pi * 0.1015 ** 2,
     Cd_rocket_at_Ma = 0.44
 )
-NDRT_2020_launch_conditions = LaunchConditions(
+NDRT_2020_environment = Environment(
     # as per parameters in the GitHub, and using RocketPy to get launchpad pressure and temp from their weather data file (https://github.com/RocketPy-Team/RocketPy/blob/master/tests/fixtures/acceptance/NDRT_2020/ndrt_2020_weather_data_ERA5.nc)
     launchpad_pressure = 99109,
     launchpad_temp = 278.03-273.15,
-    L_launch_rail = 3.353,
-    launch_rail_elevation = 90,
-    launch_rail_direction=181,
     latitude = 41.775447,
     altitude = 206,
     mean_wind_speed=1,
     wind_heading=180
 )
+NDRT_2020_launchpad = Launchpad(
+    rail_length=3.353,
+    launch_rail_elevation=90,
+    launch_rail_direction=181
+)
+NDRT_2020_drogue_parachute = Parachute(
+    Cd=1.5,
+    A=np.pi * (24 * 25.4 / 1000) * (24 * 25.4 / 1000) / 4
+)
 NDRT_2020_flight = PastFlight(
     rocket = NDRT_2020_rocket,
-    launch_conditions = NDRT_2020_launch_conditions,
+    environment = NDRT_2020_environment,
+    launchpad = NDRT_2020_launchpad,
+    parachute = NDRT_2020_drogue_parachute,
     apogee = 1317,
     name="NDRT 2020"
 )
@@ -352,21 +366,29 @@ Valetudo_rocket = Rocket(
         # they define a drag coefficient of (0.9081/1.05) in the notebook, but they have a few different curves here: https://github.com/RocketPy-Team/RocketPy/tree/master/tests/fixtures/acceptance/PJ_Valetudo
         # none of them were made with CFD, so they're all probably far enough off that it's not worth the effort to spend time on it
 )
-Valetudo_launch_conditions = LaunchConditions(
+Valetudo_environment = Environment(
     # as per parameters in the GitHub
     launchpad_pressure=94184,
     launchpad_temp=301.53-273.15,
-    L_launch_rail=5.7,
-    launch_rail_elevation=84.7,
-    launch_rail_direction=53,
     latitude=-23.363611,
     altitude=668,
     mean_wind_speed=3.27,
     wind_heading=96.77
 )
+Valetudo_launchpad = Launchpad(
+    rail_length=5.7,
+    launch_rail_elevation=84.7,
+    launch_rail_direction=53
+)
+Valetudo_drogue_parachute = Parachute(
+    Cd = 1.3,
+    A = 0.349
+)
 Valetudo_flight = PastFlight(
     rocket=Valetudo_rocket,
-    launch_conditions=Valetudo_launch_conditions,
+    environment=Valetudo_environment,
+    launchpad=Valetudo_launchpad,
+    parachute=Valetudo_drogue_parachute,
     apogee=860,
     name="Valetudo 2019"
 )
@@ -819,22 +841,31 @@ Juno3_rocket = Rocket(
     A_rocket=np.pi*0.0655**2,
     Cd_rocket_at_Ma=Juno3_Cd_rocket_at_Ma
 )
-Juno3_launch_conditions = LaunchConditions(
+Juno3_environment = Environment(
     # note that launchpad pressure in the GitHub notebook is 84992 Pa, but the SRAD flight computer read 86260.99854 on the ground, and the COTS flight computer read 86170 Pa. Going to stick with 84992, precision of the value makes me think it was measured with some other instrument
     launchpad_pressure=84992,
     # as per parameters in the GitHub:
     launchpad_temp=306.95-273.15,
-    L_launch_rail=5.2,
-    launch_rail_elevation=85,
-    launch_rail_direction=105,
     latitude=32.939377,
     altitude=1480,
     mean_wind_speed=14, # it looks like the launch time on the ipynb of "around 17hrs local time" is incorrect. Looking at the YouTube video of the launch (https://www.youtube.com/watch?v=sayT2Tos7Fc), they launch 1.5 hrs into the live stream, with about 3.5 hours of launches following them. Launches ended at 4:30 pm in 2023 (https://www.soundingrocket.org/uploads/9/0/6/4/9064598/sa_cup_ims-20220907.pdf). Estimating their launch at around 1pm local time, or 20:00 UTC. Reading the historical data (https://www.dropbox.com/sh/swi7jrl14evqmap/AADW6GMVIv87KkOBY1-flsoIa?e=1), the wind speed at that time was about what they reported in theit ipynb, so we'll stick with that
     wind_heading=64.23
 )
+Juno3_launchpad = Launchpad(
+    rail_length=5.2,
+    launch_rail_elevation=85,
+    launch_rail_direction=105
+)
+Juno3_drogue_parachute = Parachute(
+    Cd = 1,
+    A = 0.885,
+    deploy_delay=0.5
+)
 Juno3_flight = PastFlight(
     rocket=Juno3_rocket,
-    launch_conditions=Juno3_launch_conditions,
+    environment=Juno3_environment,
+    launchpad=Juno3_launchpad,
+    parachute=Juno3_drogue_parachute,
     apogee=3213,
     name="Juno III 2023"
 )
@@ -911,20 +942,28 @@ Bella_Lui_rocket = Rocket(
     A_rocket=np.pi*(156/2000)**2,
     Cd_rocket_at_Ma=0.43
 )
-Bella_Lui_launch_conditions = LaunchConditions(
+Bella_Lui_environment = Environment(
     launchpad_pressure=98043,
     launchpad_temp=286.63-273.15,
-    L_launch_rail=4.2,
-    launch_rail_elevation=89,
-    launch_rail_direction=45,
     latitude=47.213476,
     altitude=407,
     mean_wind_speed=1.4,
     wind_heading=213.21
 )
+Bella_Lui_launchpad = Launchpad(
+    rail_length=4.2,
+    launch_rail_elevation=89,
+    launch_rail_direction=45
+)
+Bella_Lui_drogue_parachute = Parachute(
+    Cd = 1,
+    A = np.pi / 4
+)
 Bella_Lui_flight = PastFlight(
     rocket=Bella_Lui_rocket,
-    launch_conditions=Bella_Lui_launch_conditions,
+    environment=Bella_Lui_environment,
+    launchpad=Bella_Lui_launchpad,
+    parachute=Bella_Lui_drogue_parachute,
     apogee=458.97,
     name="Bella Lui 2020"
 )
@@ -947,13 +986,20 @@ This is the flight that the sim is furthest off from predicting well. Possible r
 Could diagnose more by comparing plots of data from the flight computer to plots from the sim
 """
 
+
+# TODO: add a 30k ft flight to the tests
 past_flights = [NDRT_2020_flight, Valetudo_flight, Juno3_flight, Bella_Lui_flight]
 
-default_airbrakes_model = Airbrakes(
+example_airbrakes_model = Airbrakes(
     num_flaps = 3,
     A_flap = 0.004,  # m^2  flap area
     Cd_brakes = 1,
     max_deployment_angle = 45,  # deg
     max_deployment_rate = 5,  # deg/s
     max_retraction_rate = 10 # deg/s
+)
+
+example_parachute = Parachute(
+    Cd=1.5,
+    A=np.pi*0.1
 )

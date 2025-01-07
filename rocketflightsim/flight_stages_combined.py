@@ -14,21 +14,21 @@ default_timestep = con.default_timestep
 
 # TODO improvements to overall simulator:
 """
-    - make it easier to do multi-stage rockets? Currently just chain rail_clearance_to_burnout for each additional stage with new rocket and motor objects for additional stages
+    - make it easier to do multi-stage rockets? Currently just chain sim_unguided_boost for each additional stage with new rocket and motor objects for additional stages
     - see if Numba can speed up the simulation https://numba.pydata.org/
     - consider using different default timesteps for different stages
         - consider a full-on adaptive timestep system like ork has
-    - add descent dynamics - quick and dirty first descent_under_chute function
+    - speed test using np.linalg.norm vs squaring and square rooting
 """
 
 # TODO split simulator into stages. better for readability, but also for allowing more complex simulations with multiple stages, and going beyond the troposphere with different lapse rates, a different gravity model, and a different wind model. Could even use it for educational purposes like showing the importance of having a launch rail. Also makes it faster not having to store most variables during some stages (nothing stored at all before liftoff, no need to store angle to vertical at each timestep while on launch rail), and not having to re-do significant parts of the simulation when running it multiple times (if looking at how varying wind affects the flightpath, can just sim to launch rail clearance once). Could also make a few things faster and more precise like between ignition and liftoff, instead of timestepping, could solve for the exact time of liftoff.
 
-from .ignition_to_liftoff import flight_sim_ignition_to_liftoff
-from .liftoff_to_rail_clearance import flight_sim_liftoff_to_rail_clearance
-from .rail_clearance_to_burnout import flight_sim_rail_clearance_to_burnout
-from .burnout_to_apogee import flight_sim_burnout_to_apogee
+from .flight_sim_ignition_to_liftoff import sim_ignition_to_liftoff
+from .flight_sim_guided import sim_liftoff_to_rail_clearance
+from .flight_sim_unguided_boost import sim_unguided_boost
+from .flight_sim_coast import sim_coast_phase, sim_coast_to_apogee
 
-def flight_sim_ignition_to_apogee(rocket, launch_conditions, timestep=default_timestep):
+def flight_sim_ignition_to_apogee(rocket, environment, launchpad, timestep=default_timestep):
     """
     Simulate the flight of a rocket from ignition to apogee given its specifications and launch conditions.
 
@@ -36,8 +36,10 @@ def flight_sim_ignition_to_apogee(rocket, launch_conditions, timestep=default_ti
     ----
     rocket : Rocket
         An instance of the Rocket class.
-    launch_conditions : LaunchConditions
-        An instance of the LaunchConditions class.
+    environment : Environment
+        An instance of the Environment class.
+    launchpad : Launchpad
+        An instance of the Launchpad class.
     timestep : float, optional
         The time increment for the simulation in seconds.
 
@@ -46,17 +48,17 @@ def flight_sim_ignition_to_apogee(rocket, launch_conditions, timestep=default_ti
     list
         aaa
     """
-    t_liftoff = flight_sim_ignition_to_liftoff(rocket, launch_conditions)
+    t_liftoff = sim_ignition_to_liftoff(rocket, environment, launchpad)
 
-    state_at_rail_clearance = flight_sim_liftoff_to_rail_clearance(rocket, launch_conditions, t_liftoff, timestep) [-1]
+    state_at_rail_clearance = sim_liftoff_to_rail_clearance(rocket, environment, launchpad, t_liftoff, timestep) [-1]
 
-    state_at_burnout = flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, state_at_rail_clearance, timestep)[-1]
+    state_at_burnout = sim_unguided_boost(rocket, environment, state_at_rail_clearance, timestep)[-1]
 
-    state_at_apogee = flight_sim_burnout_to_apogee(rocket, launch_conditions, state_at_burnout, timestep)[-1]
+    state_at_apogee = sim_coast_to_apogee(rocket, environment, state_at_burnout, timestep)[-1]
 
     return state_at_apogee
 
-""" combining them. and likely some kind of flagging specific times as key events (needed? at least some of them can be gotten from the launch conditions like burnout (from time), liftoff (first non-zero height), and rail clearance (from rail height))
+""" TODO combining them. and likely some kind of flagging specific times as key events (needed? at least some of them can be gotten from the launch conditions like burnout (from time), liftoff (first non-zero height), and rail clearance (from rail height))
 
 key events:
     ignition
@@ -65,9 +67,9 @@ key events:
         first v_z > 0
     max g from motor burn
         a_max
-            can be solved for by looking at the thrust curve and mass curve like done in flight_sim_ignition_to_liftoff
+            can be solved for by looking at the thrust curve and mass curve like done in sim_ignition_to_liftoff
     rail clearance
-        first z > effective_h_launch_rail
+        first z > effective_rail_height
     max q
         air_density * v ** 2 is max
     max speed and Ma
@@ -78,12 +80,41 @@ key events:
         last simmed state
 """
 
+def flight_sim_ballistic_recovery(rocket, environment, launchpad, timestep=default_timestep):
+    """
+    Simulate the flight of a rocket that does not deploy a parachute and instead falls ballistically back to the ground.
+
+    Args
+    ----
+    rocket : Rocket
+        An instance of the Rocket class.
+    environment : Environment
+        An instance of the Environment class.
+    launchpad : Launchpad
+        An instance of the Launchpad class.
+    timestep : float, optional
+        The time increment for the simulation in seconds.
+
+    Returns
+    -------
+    list
+        aaa
+    """
+    t_liftoff = sim_ignition_to_liftoff(rocket, environment, launchpad)
+
+    state_at_rail_clearance = sim_liftoff_to_rail_clearance(rocket, environment, launchpad, t_liftoff, timestep) [-1]
+
+    state_at_burnout = sim_unguided_boost(rocket, environment, state_at_rail_clearance, timestep)[-1]
+
+    state_at_impact = sim_coast_phase(rocket, environment, state_at_burnout, 'impact')[-1]
+
+    return state_at_impact
 
 # TODO: replace all old combined functions
 
 # Flight simulation
 def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
-    """
+    """ OLD FUNCTION
     Simulate the flight of a rocket until its apogee given its specifications and launch conditions.
 
     Args:
@@ -105,7 +136,7 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
     # Extract launch condition parameters
     launchpad_temp = launch_conditions.launchpad_temp
 
-    L_launch_rail = launch_conditions.L_launch_rail
+    rail_length = launch_conditions.rail_length
     angle_to_vertical = launch_conditions.angle_to_vertical
     launch_rail_direction = launch_conditions.launch_rail_direction
     
@@ -183,14 +214,14 @@ def simulate_flight(rocket, launch_conditions, timestep=default_timestep):
 
     # Liftoff until launch rail cleared
     time += timestep
-    effective_L_launch_rail = L_launch_rail - rocket.h_second_rail_button
-    effective_h_launch_rail = effective_L_launch_rail * cos_rail_angle_to_vertical
+    effective_rail_length = rail_length - rocket.h_second_rail_button
+    effective_rail_height = effective_rail_length * cos_rail_angle_to_vertical
 
     sin_launch_rail_direction = np.sin(launch_rail_direction)
     cos_launch_rail_direction = np.cos(launch_rail_direction)
 
     # Simulate flight from liftoff until the launch rail is cleared
-    while z < effective_h_launch_rail:
+    while z < effective_rail_height:
         # Update environmental conditions based on height
         temperature = hfunc.temp_at_altitude(z, launchpad_temp, lapse_rate = T_lapse_rate)
         air_density = hfunc.air_density_optimized(temperature, multiplier, exponent)

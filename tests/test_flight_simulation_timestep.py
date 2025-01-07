@@ -5,10 +5,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import unittest
 
-from rocketflightsim.flight_simulation import simulate_flight, simulate_airbrakes_flight_max_deployment
+from rocketflightsim.flight_stages_combined import simulate_flight, simulate_airbrakes_flight_max_deployment
 
 from .test_configs import past_flights
-from .test_configs import Juno3_rocket, Juno3_launch_conditions
+from .test_configs import Juno3_rocket, Juno3_environment
 
 class TestDefaultTimestep(unittest.TestCase):
      def test_default_timestep(self):

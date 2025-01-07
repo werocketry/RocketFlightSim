@@ -4,7 +4,12 @@ import os
 import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from rocketflightsim.rocket_classes import Motor, Rocket, LaunchConditions, Airbrakes
+from rocketflightsim.classes.motor import Motor
+from rocketflightsim.classes.rocket import Rocket
+from rocketflightsim.classes.environment import Environment
+from rocketflightsim.classes.launchpad import Launchpad
+from rocketflightsim.classes.airbrakes import Airbrakes
+import rocketflightsim.constants as con
 
 # Example motor configurations
 Cesaroni_7579M1520_P = Motor(
@@ -83,7 +88,19 @@ example_rocket = Rocket(
     h_second_rail_button = 0.8  # m
 )
 
-# LaunchConditions class configuration for Spaceport America Cup
+# Example airbrakes model
+example_airbrakes_model = Airbrakes(
+    num_flaps = 3,
+    A_flap = 0.004,  # m^2  flap area
+    Cd_brakes = 1,
+    max_deployment_angle = 45,  # deg
+    max_deployment_rate = 5,  # deg/s
+    max_retraction_rate = 10 # deg/s
+)
+
+
+# TODO split the competition environments into a separate file?
+# Environment class configuration for Spaceport America Cup
 T_lapse_rate_SA = -0.00817  # K/m
 """ How T_lapse_rate at Spaceport America was determined
 
@@ -113,8 +130,6 @@ The following was the most comprehensive source found for temperature lapse rate
 - has values for many locations in New Mexico (search for n. mex), and they ranged from -1.4 to -3.9 K/km
     - the closest station to SA was Datil, which had a lapse rate of -3.1 K/km
 """
-L_launch_rail_ESRA_provided_SAC = 5.18  # m, 
-""" ESRA provides teams with a 5.18m rail at competition """
 launchpad_pressure_SAC = 86400  # Pa
 """ How the launchpad pressure at Spaceport America was determined
 
@@ -133,6 +148,18 @@ latitude_SA = 32.99  # deg, Spaceport America's latitude
 """ https://maps.app.goo.gl/rZT6MRLqHneA7wNX7 """
 altitude_SA = 1401  # m, Spaceport America's elevation
 """ https://www.spaceportamerica.com/faq/#toggle-id-15 """
+
+Spaceport_America_Cup_avg_environment = Environment(
+    launchpad_pressure = launchpad_pressure_SAC,
+    launchpad_temp = launchpad_temp_SAC,
+    local_T_lapse_rate = T_lapse_rate_SA,
+    latitude = latitude_SA,
+    altitude = altitude_SA
+)
+
+# Launchpad class configuration for Spaceport America Cup
+rail_length_ESRA_provided_SAC = 17 * con.ft_to_m_conversion  # m
+""" ESRA provides teams with a 5.18m rail at competition """
 launch_rail_elevation_SAC = 86  # deg from horizontal
 """ Notes on the standard launch angle at Spaceport America Cup
 
@@ -145,28 +172,59 @@ Previously, the standard launch angle was 84°, as noted in the DTEG:
 DTEG 10.1.1: 
     > Launch vehicles will nominally launch at an elevation angle of 84° ±1°
 
+TODO 2025 DTEG says 86° ±2°. Ask ESRA if they changed it back?
+
 DTEG 10.1.2:
     > Range Safety Officers reserve the right to require certain vehicles’ launch elevation be lower or higher if flight safety issues are identified during pre-launch activities
 """
 
-Spaceport_America_avg_launch_conditions = LaunchConditions(
-    launchpad_pressure = launchpad_pressure_SAC,
-    launchpad_temp = launchpad_temp_SAC,
-    L_launch_rail = L_launch_rail_ESRA_provided_SAC,
-    launch_rail_elevation = launch_rail_elevation_SAC,
-    local_T_lapse_rate = T_lapse_rate_SA,
-    latitude = latitude_SA,
-    altitude = altitude_SA
+Spaceport_America_Cup_default_launchpad = Launchpad(
+    rail_length = rail_length_ESRA_provided_SAC,
+    launch_rail_elevation = launch_rail_elevation_SAC
 )
 
-# TODO: add avg conditions for Launch Canada
+# Environment class configuration for Launch Canada
+T_lapse_rate_LC = con.T_lapse_rate
+""" How T_lapse_rate at Launch Canada was determined
 
-# Default airbrakes model
-default_airbrakes_model = Airbrakes(
-    num_flaps = 3,
-    A_flap = 0.004,  # m^2  flap area
-    Cd_brakes = 1,
-    max_deployment_angle = 45,  # deg
-    max_deployment_rate = 5,  # deg/s
-    max_retraction_rate = 10 # deg/s
+From a really really rough analysis of the flight data here: https://github.com/UVicRocketry/Xenia1-MaGP-I/tree/main
+
+The temperature readings couldn't be used because it looks like the flight computer never got to the temperature of the outside (unless it only dropped 4 degrees on a 10k ft flight). However, looking at the pressure data, it looks similar to what it should look like given a lapse rate quite close to the standard -6.5 K/km. This is a very rough estimate, and it would be better to get a more accurate value from real temperature measurements at the launch site around late August.
+"""
+launchpad_pressure_LC = 102000  # Pa
+""" Ground-level pressure at Launch Canada note
+
+I could not find historical weather data for the launch site itself. Camp Kenogaming is very close to the launch site (6km away) and at nearly the same elevation: https://www.timeanddate.com/weather/@5914408/historic?month=8&year=2024
+"""
+launchpad_temp_LC = 20  # deg C
+""" Ground-level temperature at Launch Canada note
+
+I could not find historical weather data for the launch site itself. Camp Kenogaming is very close to the launch site (6km away) and at nearly the same elevation: https://www.timeanddate.com/weather/@5914408/historic?month=8&year=2024
+
+Flights can occur from fairly early in the morning to late in the afternoon, so the temperature at the time of launch can vary significantly. Getting closer to launch day, it would be more accurate to use a weather forecast to get a value for expected temperature(s).
+
+You can also consider running simulations with a range of temperatures that have been seen on launch days in the past (normally between 15 and 30 C) to see how different ground-level temperatures could affect a rocket's flight.
+"""
+latitude_LC = 47.987 # deg, Launch Canada's launch site latitude
+""" https://maps.app.goo.gl/n76cD331j7LiQiTB6 """
+altitude_LC = 364 # m, Launch Canada's launch site elevation
+""" from Google Earth 
+https://earth.google.com/web/search/Launch+Canada+Launch+Pad/@47.9869503,-81.8485488,363.96383335a,679.10907018d,35y """
+
+Launch_Canada_avg_environment = Environment(
+    launchpad_pressure = launchpad_pressure_LC,
+    launchpad_temp = launchpad_temp_LC,
+    local_T_lapse_rate = T_lapse_rate_LC,
+    latitude = latitude_LC,
+    altitude = altitude_LC
+)
+
+# Launchpad class configuration for Launch Canada
+rail_length_provided_LC = 18.5 * con.ft_to_m_conversion # m
+launch_rail_elevation_LC = 84 # deg from horizontal
+""" DTEG """
+
+Launch_Canada_default_launchpad = Launchpad(
+    rail_length = rail_length_provided_LC,
+    launch_rail_elevation = launch_rail_elevation_LC
 )

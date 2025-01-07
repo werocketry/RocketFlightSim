@@ -2,8 +2,8 @@ import numpy as np
 
 from . import helper_functions as hfunc
 from . import constants as con
-
-def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_state_vector, timestep = con.default_timestep):
+# TODO merge this with the coast sim functions into an unguided flight sim file?
+def sim_unguided_boost(rocket, environment, initial_state_vector, timestep = con.default_timestep):
     """
     Simulate the flight of a rocket from the moment of launch rail clearance until motor burnout.
 
@@ -11,8 +11,8 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_stat
     ----
     rocket : Rocket
         An instance of the Rocket class.
-    launch_conditions : LaunchConditions
-        An instance of the LaunchConditions class.
+    environment : Environment
+        An instance of the Environment class.
     initial_state_vector : tuple
         A tuple detailing the state of the rocket at launch rail clearance. AAA
     timestep : float
@@ -23,19 +23,18 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_stat
     list
         A list of tuples containing the state of the rocket at each timestep. Each tuple contains the time, x, y, z, v_x, v_y, v_z, a_x, a_y, and a_z of the rocket at that time.
     """
-    # TODO maybe after first implementation, have it determine the exact state (between timesteps) at burnout and replace the last state with that
 
     # unpack environmental variables
-    launchpad_temp = launch_conditions.launchpad_temp
+    launchpad_temp = environment.launchpad_temp
 
-    T_lapse_rate = launch_conditions.local_T_lapse_rate
-    F_gravity = launch_conditions.local_gravity
+    T_lapse_rate = environment.local_T_lapse_rate
+    F_gravity = environment.local_gravity
 
-    multiplier = launch_conditions.density_multiplier
-    exponent = launch_conditions.density_exponent
+    multiplier = environment.density_multiplier
+    exponent = environment.density_exponent
 
-    mean_wind_speed = launch_conditions.mean_wind_speed
-    wind_heading = launch_conditions.wind_heading
+    mean_wind_speed = environment.mean_wind_speed
+    wind_heading = environment.wind_heading
     windspeed_x = mean_wind_speed * np.sin(wind_heading)
     windspeed_y = mean_wind_speed * np.cos(wind_heading)
 
@@ -48,12 +47,12 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_stat
 
     # unpack simulation variables
     time = initial_state_vector[0]
-    # x = initial_state_vector[1]
-    # y = initial_state_vector[2]
-    z = initial_state_vector[1]
-    v_x = initial_state_vector[2]
-    v_y = initial_state_vector[3]
-    v_z = initial_state_vector[4]
+    x = initial_state_vector[1]
+    y = initial_state_vector[2]
+    z = initial_state_vector[3]
+    v_x = initial_state_vector[4]
+    v_y = initial_state_vector[5]
+    v_z = initial_state_vector[6]
     groundspeed = np.sqrt(v_x**2 + v_y**2 + v_z**2) # for comparing to airspeed to get AoA at clearance, eventually make a better way to have it fly with a small AoA for the first little bit
     airspeed = np.sqrt((v_x - 0.2*windspeed_x)**2 + (v_y - 0.2*windspeed_y)**2 + v_z**2)
 
@@ -86,9 +85,8 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_stat
         v_y += a_y * timestep
         v_z += a_z * timestep
 
-        # add x and y after finishing implementation and comparing speed to old version
-        # x += v_x * timestep
-        # y += v_y * timestep
+        x += v_x * timestep
+        y += v_y * timestep
         z += v_z * timestep
 
         # determine new headings
@@ -102,8 +100,8 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_stat
         simulated_values.append(
             (
                 time,
-                # x,
-                # y,
+                x,
+                y,
                 z,
                 v_x,
                 v_y,
@@ -113,5 +111,21 @@ def flight_sim_rail_clearance_to_burnout(rocket, launch_conditions, initial_stat
                 a_z,
             )
         )
-    
+
+    # Interpolate to find the exact state at burnout time
+    last_state = simulated_values[-1]
+    second_last_state = simulated_values[-2]
+
+    # Linear interpolation between the last two states
+    time_diff = last_state[0] - second_last_state[0]
+    fraction = (burnout_time - second_last_state[0]) / time_diff
+
+    interpolated_state = tuple(
+        second_last_state[i] + fraction * (last_state[i] - second_last_state[i])
+        for i in range(len(last_state))
+    )
+
+    # Replace the last state with the interpolated state
+    simulated_values[-1] = interpolated_state
+
     return simulated_values
