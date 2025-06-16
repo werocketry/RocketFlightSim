@@ -665,7 +665,7 @@ def reshape_thrust_curve(thrust_curve, total_impulse, burn_time):
     time_array = np.array(list(thrust_curve.keys()))
     thrust_array = np.array(list(thrust_curve.values()))
     new_time_array = burn_time/time_array[-1] * time_array
-    old_total_impulse = np.trapz(thrust_array, time_array)
+    old_total_impulse = np.trapezoid(thrust_array, time_array)
     new_thrust_array = thrust_array * total_impulse / old_total_impulse
     return {new_time_array[i]: new_thrust_array[i] for i in range(len(new_time_array))}
 total_impulse, burn_time = 8800, 5.8

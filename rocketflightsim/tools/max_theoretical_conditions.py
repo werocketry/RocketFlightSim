@@ -66,4 +66,38 @@ def max_theoretical_speed(rocket: Rocket, environment: Environment=None, timeste
     
     return v_max
 
-# TODO: add max_theoretical_altitude? maybe just call on the flight function and use no drag. But would a dedicated one using max_theoretical_speed be significantly faster?
+def max_theoretical_apogee(rocket: Rocket, environment: Environment=None, timestep: float=0.0005):
+    """
+    Returns the maximum theoretical apogee that a rocket can reach. Assumes no drag, the motor performs at or below spec thrust curve, and no parts of the rocket fall off.
+    Args
+    ----
+    - rocket (Rocket): A Rocket object.
+    - environment (Environment, optional): An Environment object.
+    - timestep (float, optional): The time increment for the integration in seconds.
+    Returns
+    -------
+    - float: The maximum theoretical apogee the rocket can reach in meters.
+    """
+    t = 0
+    v = 0
+    z = 0
+    if environment:
+        F_gravity = environment.local_gravity
+    else:
+        F_gravity = con.F_gravity
+    
+    while t < rocket.motor.burn_time:
+        mass = hfunc.mass_at_time(t, rocket.dry_mass, rocket.motor.fuel_mass_curve)
+        thrust = hfunc.thrust_at_time(t, rocket.motor.thrust_curve)
+        acceleration = thrust / mass - F_gravity
+        if acceleration < 0:
+            acceleration = 0
+        v += acceleration * timestep
+        z += v * timestep
+        t += timestep
+    
+    acceleration = - F_gravity
+    while v > 0:
+        v += acceleration * timestep
+        z += v * timestep
+    return z

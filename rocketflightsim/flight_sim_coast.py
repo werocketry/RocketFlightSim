@@ -3,7 +3,7 @@ import numpy as np
 from . import helper_functions as hfunc
 from . import constants as con
 
-def sim_coast_phase(rocket, environment, initial_state_vector, stop_condition, stop_condition_value, timestep = con.default_timestep):
+def sim_coast_phase(rocket, environment, initial_state_vector, stop_condition = 'apogee', stop_condition_value = None, timestep = con.default_timestep):
     """
     Simulate the coast phase of a rocket's flight until a specified stop condition.
 
@@ -69,6 +69,9 @@ def sim_coast_phase(rocket, environment, initial_state_vector, stop_condition, s
         stop_condition_fn = lambda: z <= stop_condition_value
     elif stop_condition == 'after_delay':
         stop_condition_fn = lambda: time - initial_state_vector[0] >= stop_condition_value
+
+    if stop_condition_fn():
+        raise ValueError(f"Stop condition '{stop_condition}' is already met at the start of the simulation.")
 
     # simulate flight from launch rail clearance until motor burnout
     simulated_values = []
@@ -231,24 +234,24 @@ def sim_coast_to_apogee(rocket, environment, initial_state_vector, timestep = co
             )
         )
 
-    # Interpolate to find the exact state at apogee
+    # interpolate to find the exact state at apogee
     last_state = simulated_values[-1]
     second_last_state = simulated_values[-2]
 
     t1, v_z1 = second_last_state[0], second_last_state[6]
     t2, v_z2 = last_state[0], last_state[6]
 
-    # Linear interpolation to find the time at which v_z reaches zero (apogee)
+    # linear interpolation to find the time at which v_z reaches zero (apogee)
     t_apogee = t1 - v_z1 * (t2 - t1) / (v_z2 - v_z1)
     fraction = (t_apogee - t1) / (t2 - t1)
 
-    # Interpolate all state components to find the state at apogee
+    # interpolate all state components to find the state at apogee
     interpolated_state = tuple(
         second_last_state[i] + fraction * (last_state[i] - second_last_state[i])
         for i in range(len(last_state))
     )
 
-    # Replace the last state with the interpolated state
+    # replace the last state with the interpolated state
     simulated_values[-1] = interpolated_state
 
     return simulated_values

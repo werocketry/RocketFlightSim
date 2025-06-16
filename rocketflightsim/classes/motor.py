@@ -48,8 +48,8 @@ class Motor:
         self.thrust_curve = thrust_curve
         self.dry_mass = dry_mass
 
-        self.total_impulse = np.trapz(list(thrust_curve.values()), list(thrust_curve.keys()))
-        # TODO: not important for this in and of itself, but for future additions, look at difference between using numpy.trapz and scipy.integrate.trapz or even other integration functions
+        self.total_impulse = np.trapezoid(list(thrust_curve.values()), list(thrust_curve.keys()))
+        # TODO: not important for this in and of itself, but for future additions, look at difference between using np.trapezoid and other integration functions
         # TODO: maybe make it only calculate total impulse if it's called on, as it slows down the sim a little
         self.burn_time = max(thrust_curve.keys())
         # TODO: add burn efficiency, some propelant mass (~2-5% ?) becomes dry mass (can just assign it to dry mass at the start of the sim/at class init)

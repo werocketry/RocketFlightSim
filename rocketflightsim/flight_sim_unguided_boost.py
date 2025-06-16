@@ -112,11 +112,11 @@ def sim_unguided_boost(rocket, environment, initial_state_vector, timestep = con
             )
         )
 
-    # Interpolate to find the exact state at burnout time
+    # interpolate to find the exact state at burnout time
     last_state = simulated_values[-1]
     second_last_state = simulated_values[-2]
 
-    # Linear interpolation between the last two states
+    # linear interpolation between the last two states
     time_diff = last_state[0] - second_last_state[0]
     fraction = (burnout_time - second_last_state[0]) / time_diff
 
@@ -125,7 +125,7 @@ def sim_unguided_boost(rocket, environment, initial_state_vector, timestep = con
         for i in range(len(last_state))
     )
 
-    # Replace the last state with the interpolated state
+    # replace the last state with the interpolated state
     simulated_values[-1] = interpolated_state
 
     return simulated_values

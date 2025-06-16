@@ -56,8 +56,4 @@ class TestSimUnguidedBoost(unittest.TestCase):
             print(f"\tSimulated max acceleration: {round(max_acceleration_simulated, 2)} m/s\n\tMax theoretical acceleration: {round(max_acceleration_theoretical, 2)} m/s\n\tDifference: {round(difference, 2)} m/s\n\tPercent difference: {round(proportional_difference*100, 2)}%\n")
             assert difference > 0
 
-            # next, compare max simulated speed and acceleration to flight data
-            # TODO
-
-            # then, check that if total impulse were added to the rocket's dry mass in the first instant after ignition, it would give a higher max acceleration than the simulator predicts
-            # TODO
+            # TODO check that if total impulse were added to the rocket's dry mass in the first instant after ignition, it would give a higher max acceleration than the simulator predicts

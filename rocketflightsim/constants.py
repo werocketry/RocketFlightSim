@@ -32,7 +32,7 @@ ft_to_m_conversion = 0.3048 # m/ft
 m_to_ft_conversion = 1/ft_to_m_conversion  # ft/m
 
 # Default launch site values. Specific launch site values can be set in Environment objects
-F_gravity = 9.80665  # m/s^2
+F_gravity = 9.80665  # m/s^2 TODO rename a_gravity everywhere?
 T_lapse_rate = -0.0065  # K/m
 
 # Default timestep for the simulation

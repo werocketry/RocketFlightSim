@@ -7,4 +7,4 @@ RocketFlightSim (RFS) is a lightweight 3-DOF rocket flight simulator. Simulation
 
 RFS is designed to be simple to use, understand, and modify, with the goal of providing a platform for students and hobbyists to learn about rocket flight dynamics and simulation. Emphasis is placed on computational efficiency, with the goal of being lightweight enough to run real-time during flight on an onboard microcontroller.
 
-Note that RFS runs fastest on Python 3.13 due to its JIT compilation capabilities.
+Note that RFS runs fastest on Python 3.13 or later due to its JIT compilation capabilities.

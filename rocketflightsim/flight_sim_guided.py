@@ -119,20 +119,17 @@ def sim_liftoff_to_rail_clearance(rocket, environment, launchpad, t_liftoff, tim
             )
         )
 
-    # Interpolate to find the exact state at rail clearance
+    # interpolate to find the exact state at rail clearance
     last_state = simulated_values[-1]
     second_last_state = simulated_values[-2]
 
-    # Linear interpolation between the last two states
+    # linear interpolation between the last two states
     fraction = (effective_rail_height - second_last_state[3]) / (last_state[3] - second_last_state[3])
 
     interpolated_state = tuple(
         second_last_state[i] + fraction * (last_state[i] - second_last_state[i])
         for i in range(len(last_state))
     )
-
-    # Replace the last state with the interpolated state
-    simulated_values[-1] = interpolated_state
 
     # replace the last state with the interpolated state
     simulated_values[-1] = interpolated_state
