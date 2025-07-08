@@ -28,5 +28,6 @@ class TestSimLiftoffToRailClearance(unittest.TestCase):
             print(f"\tHeight of rail: {height_of_rail} m")
 
             print(f"\tSpeed at rail clearance: {np.sqrt(rail_clearance_state[4]**2 + rail_clearance_state[5]**2 + rail_clearance_state[6]**2)} m/s")
+            print(f"\tTime at rail clearance: {rail_clearance_state[0]} s")
 
             assert height_at_rail_clearance < height_of_rail # the rocket is free of the rail's influence when the second lowest rail button/launch lug clears the rail, at which point the bottom of the rocket (which is what's stored as the rocket's z coordinate) is below the tip of the rail

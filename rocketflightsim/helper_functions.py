@@ -42,7 +42,7 @@ def air_density_fn(pressure, temp):
 
 def air_density_optimized(temp, multiplier, exponent):
     """
-    Calculate the density of air at a given height above a reference point.
+    Calculate the density of air at a given height above a reference point. Optimized function that assumes the temperature lapse rate and force of gravity are constant (as they effectively are in the troposphere) to avoid repeat calculations.
 
     Args
     ----

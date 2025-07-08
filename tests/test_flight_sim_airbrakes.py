@@ -9,7 +9,7 @@ import unittest
 from rocketflightsim.flight_sim_ignition_to_liftoff import sim_ignition_to_liftoff
 from rocketflightsim.flight_sim_guided import sim_liftoff_to_rail_clearance
 from rocketflightsim.flight_sim_unguided_boost import sim_unguided_boost
-from rocketflightsim.flight_sim_coast import sim_coast_to_apogee
+from rocketflightsim.flight_sim_coast import sim_coast
 from rocketflightsim.flight_sim_airbrakes import sim_max_airbrakes_deployment_to_apogee
 
 from .test_configs import past_flights, example_airbrakes_model
@@ -27,7 +27,7 @@ class TestAirbrakesToApogee(unittest.TestCase):
 
             burnout_state = sim_unguided_boost(past_flight.rocket, past_flight.environment, rail_clearance_state)[-1]
 
-            apogee_state_no_airbrakes = sim_coast_to_apogee(past_flight.rocket, past_flight.environment, burnout_state)[-1]
+            apogee_state_no_airbrakes = sim_coast(past_flight.rocket, past_flight.environment, burnout_state)[-1]
 
             apogee_state = sim_max_airbrakes_deployment_to_apogee(past_flight.rocket, past_flight.environment, example_airbrakes_model, burnout_state)[-1]
 

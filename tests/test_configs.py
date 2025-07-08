@@ -11,7 +11,22 @@ from rocketflightsim.classes.environment import Environment
 from rocketflightsim.classes.launchpad import Launchpad
 from rocketflightsim.classes.airbrakes import Airbrakes
 from rocketflightsim.classes.parachute import Parachute
-from rocketflightsim.rocket_classes import PastFlight
+
+class PastFlight:
+    """
+    Stores the rocket, launch conditions, and apogee of a past flight
+    TODO likely add the option to feed a full flightpath, good for comparisons of sim projection to actual flightpaths
+    """
+
+    def __init__(self, rocket, environment, launchpad, parachute = None, apogee = None, max_speed = None, max_accel = None, name = None):
+        self.rocket = rocket
+        self.environment = environment
+        self.launchpad = launchpad
+        self.parachute = parachute
+        self.apogee = apogee
+        self.max_speed = max_speed
+        self.max_accel = max_accel
+        self.name = name
 
 """ Notre Dame Rocket Team Rocket 2020
 https://github.com/RocketPy-Team/RocketPy/blob/master/docs/examples/ndrt_2020_flight_sim.ipynb
@@ -75,7 +90,7 @@ NDRT_2020_launchpad = Launchpad(
 )
 NDRT_2020_drogue_parachute = Parachute(
     Cd=1.5,
-    A=np.pi * (24 * 25.4 / 1000) * (24 * 25.4 / 1000) / 4
+    area=np.pi * (24 * 25.4 / 1000) * (24 * 25.4 / 1000) / 4
 )
 NDRT_2020_flight = PastFlight(
     rocket = NDRT_2020_rocket,
@@ -382,7 +397,7 @@ Valetudo_launchpad = Launchpad(
 )
 Valetudo_drogue_parachute = Parachute(
     Cd = 1.3,
-    A = 0.349
+    area = 0.349
 )
 Valetudo_flight = PastFlight(
     rocket=Valetudo_rocket,
@@ -858,7 +873,7 @@ Juno3_launchpad = Launchpad(
 )
 Juno3_drogue_parachute = Parachute(
     Cd = 1,
-    A = 0.885,
+    area = 0.885,
     deploy_delay=0.5
 )
 Juno3_flight = PastFlight(
@@ -957,7 +972,7 @@ Bella_Lui_launchpad = Launchpad(
 )
 Bella_Lui_drogue_parachute = Parachute(
     Cd = 1,
-    A = np.pi / 4
+    area = np.pi / 4
 )
 Bella_Lui_flight = PastFlight(
     rocket=Bella_Lui_rocket,
@@ -997,9 +1012,4 @@ example_airbrakes_model = Airbrakes(
     max_deployment_angle = 45,  # deg
     max_deployment_rate = 5,  # deg/s
     max_retraction_rate = 10 # deg/s
-)
-
-example_parachute = Parachute(
-    Cd=1.5,
-    A=np.pi*0.1
 )

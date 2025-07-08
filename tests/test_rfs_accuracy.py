@@ -17,7 +17,7 @@ class TestRFSAccuracy(unittest.TestCase):
         for past_flight in deepcopy(past_flights):
             print(f'For rocket: {past_flight.name}')
 
-            apogee_simulated = flight_sim_ignition_to_apogee(past_flight.rocket, past_flight.environment, past_flight.launchpad)[3]
+            apogee_simulated = flight_sim_ignition_to_apogee(past_flight.rocket, past_flight.environment, past_flight.launchpad)[-1][3]
             apogee_actual = past_flight.apogee
             difference = apogee_simulated - apogee_actual
             proportional_difference = difference / apogee_actual

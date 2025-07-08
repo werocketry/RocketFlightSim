@@ -9,12 +9,12 @@ import unittest
 from rocketflightsim.flight_sim_ignition_to_liftoff import sim_ignition_to_liftoff
 from rocketflightsim.flight_sim_guided import sim_liftoff_to_rail_clearance
 from rocketflightsim.flight_sim_unguided_boost import sim_unguided_boost
-from rocketflightsim.flight_sim_coast import sim_coast_to_apogee
+from rocketflightsim.flight_sim_coast import sim_coast
 from rocketflightsim.tools.max_theoretical_conditions import max_theoretical_apogee
 
 from .test_configs import past_flights
 
-class TestSimCoastToApogee(unittest.TestCase):
+class TestSimCoast(unittest.TestCase):
     def test_sim_coast_to_apogee(self):
         print("\nTesting coast to apogee function...")
 
@@ -27,7 +27,7 @@ class TestSimCoastToApogee(unittest.TestCase):
 
             burnout_state = sim_unguided_boost(past_flight.rocket, past_flight.environment, rail_clearance_state)[-1]
 
-            apogee_state = sim_coast_to_apogee(past_flight.rocket, past_flight.environment, burnout_state)[-1]
+            apogee_state = sim_coast(past_flight.rocket, past_flight.environment, burnout_state)[-1]
 
             apogee_simulated = apogee_state[3]
             apogee_no_drag = max_theoretical_apogee(past_flight.rocket, past_flight.environment)
@@ -36,3 +36,5 @@ class TestSimCoastToApogee(unittest.TestCase):
             print(f"\tSimulated apogee: {round(apogee_simulated,2)} m\n\tNo-drag apogee: {round(apogee_no_drag,2)} m\n\tDifference: {round(difference,2)} m\n\tPercent difference: {round(proportional_difference*100,2)}%\n")
 
             assert difference >= 0 # Simulated apogee should be less than or equal to no-drag apogee
+        
+        # TODO add more tests for different stop conditions

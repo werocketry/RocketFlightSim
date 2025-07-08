@@ -67,25 +67,8 @@ class StateVector:
         return np.sqrt(self.a_x**2 + self.a_y**2 + self.a_z**2)
     
 
-
 class Flightpath:
     """
     The Flightpath class 
     just make it a series of StateVectors? Does it need a class in that case?
     """
-
-class PastFlight:
-    """
-    Stores the rocket, launch conditions, and apogee of a past flight
-    TODO likely add the option to feed a full flightpath, good for comparisons of sim projection to actual flightpaths
-    """
-
-    def __init__(self, rocket, environment, launchpad, parachute = None, apogee = None, max_speed = None, max_accel = None, name = None):
-        self.rocket = rocket
-        self.environment = environment
-        self.launchpad = launchpad
-        self.parachute = parachute
-        self.apogee = apogee
-        self.max_speed = max_speed
-        self.max_accel = max_accel
-        self.name = name

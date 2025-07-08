@@ -11,7 +11,7 @@ class Rocket:
     motor : Motor object
         The rocket's motor.
     A_rocket : float
-        Cross-sectional area of the rocket (m^2) used when Cd_rocket_at_Ma was calculated.
+        Cross-sectional area of the rocket used when Cd_rocket_at_Ma was calculated (m^2).
     Cd_rocket_at_Ma : float or function
         Coefficient of drag of the rocket. May be given as a function of Mach number or as a constant.
     h_second_rail_button : float
@@ -39,7 +39,7 @@ class Rocket:
         motor : Motor object
             The rocket's motor.
         A_rocket : float
-            Cross-sectional area of the rocket (m^2). Must be the same used when the Cd_rocket_at_Ma was calculated.
+            Cross-sectional area of the rocket used when the Cd_rocket_at_Ma was calculated (m^2).
         Cd_rocket_at_Ma : float or function, optional
             Coefficient of drag of the rocket. May be given as a function of Mach number or as a constant. Defaults to a constant 0.45, which is in the ballpark of what most student team competition rockets our size have.
         h_second_rail_button : float, optional

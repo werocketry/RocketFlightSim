@@ -21,7 +21,7 @@ def sim_unguided_boost(rocket, environment, initial_state_vector, timestep = con
     Returns
     -------
     list
-        A list of tuples containing the state of the rocket at each timestep. Each tuple contains the time, x, y, z, v_x, v_y, v_z, a_x, a_y, and a_z of the rocket at that time.
+        A list of tuples containing the kinematic state of the rocket at each timestep. Each tuple contains the time, x, y, z, v_x, v_y, v_z, a_x, a_y, and a_z of the rocket at that time.
     """
 
     # unpack environmental variables

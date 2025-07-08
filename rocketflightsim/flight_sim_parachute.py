@@ -70,11 +70,11 @@ def sim_parachute(rocket, environment, initial_state_vector, parachute, stop_con
             time, x, y, z, v_x, v_y, v_z = initial_state_vector
         else:
             from . import flight_sim_coast as sim_coast
-            simulated_values = sim_coast.sim_coast_phase(rocket, environment, initial_state_vector, stop_condition = 'below_altitude', stop_condition_value = deploy_altitude)
+            simulated_values = sim_coast.sim_coast(rocket, environment, initial_state_vector, stop_condition = 'below_altitude', stop_condition_value = deploy_altitude)
             time, x, y, z, v_x, v_y, v_z = simulated_values[-1]
     elif not parachute.deploy_altitude and parachute.deploy_delay:
         from . import flight_sim_coast as sim_coast
-        simulated_values = sim_coast.sim_coast_phase(rocket, environment, initial_state_vector, stop_condition = 'after_delay', stop_condition_value = deploy_delay)
+        simulated_values = sim_coast.sim_coast(rocket, environment, initial_state_vector, stop_condition = 'after_delay', stop_condition_value = deploy_delay)
         time, x, y, z, v_x, v_y, v_z = simulated_values[-1][:7]
     else:
         # TODO implement 'both' and 'either' methods
