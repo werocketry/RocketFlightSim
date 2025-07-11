@@ -60,7 +60,7 @@ def sim_unguided_boost(rocket, environment, initial_state_vector, timestep = con
     angle_to_vertical = np.arccos(v_z / airspeed)
 
     # simulate flight from launch rail clearance until motor burnout
-    simulated_values = []
+    simulated_states = []
 
     while time < burnout_time:
         # update air properties based on height
@@ -76,9 +76,9 @@ def sim_unguided_boost(rocket, environment, initial_state_vector, timestep = con
         # update rocket's motion parameters
         mass = hfunc.mass_at_time(time, dry_mass, fuel_mass_lookup)
         thrust = hfunc.thrust_at_time(time, engine_thrust_lookup)
-        
-        a_x = (thrust - F_drag) * np.sin(angle_to_vertical) / mass * (np.sin(compass_heading))
-        a_y = (thrust - F_drag) * np.sin(angle_to_vertical) / mass * (np.cos(compass_heading))
+
+        a_x = (thrust - F_drag) * np.sin(angle_to_vertical) * np.sin(compass_heading) / mass
+        a_y = (thrust - F_drag) * np.sin(angle_to_vertical) * np.cos(compass_heading) / mass
         a_z = (thrust - F_drag) * np.cos(angle_to_vertical) / mass - F_gravity
 
         v_x += a_x * timestep
@@ -97,7 +97,7 @@ def sim_unguided_boost(rocket, environment, initial_state_vector, timestep = con
         time += timestep
 
         # append updated simulation values
-        simulated_values.append(
+        simulated_states.append(
             (
                 time,
                 x,
@@ -113,8 +113,8 @@ def sim_unguided_boost(rocket, environment, initial_state_vector, timestep = con
         )
 
     # interpolate to find the exact state at burnout time
-    last_state = simulated_values[-1]
-    second_last_state = simulated_values[-2]
+    last_state = simulated_states[-1]
+    second_last_state = simulated_states[-2]
 
     # linear interpolation between the last two states
     time_diff = last_state[0] - second_last_state[0]
@@ -126,6 +126,6 @@ def sim_unguided_boost(rocket, environment, initial_state_vector, timestep = con
     )
 
     # replace the last state with the interpolated state
-    simulated_values[-1] = interpolated_state
+    simulated_states[-1] = interpolated_state
 
-    return simulated_values
+    return simulated_states

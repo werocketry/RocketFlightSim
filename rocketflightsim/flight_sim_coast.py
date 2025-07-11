@@ -73,7 +73,7 @@ def sim_coast(rocket, environment, initial_state_vector, stop_condition = 'apoge
     if stop_condition_fn():
         raise ValueError(f"Stop condition '{stop_condition}' is already met at the start of the simulation.")
 
-    simulated_values = []
+    simulated_states = []
 
     while not stop_condition_fn():
         # update air properties based on height
@@ -87,8 +87,8 @@ def sim_coast(rocket, environment, initial_state_vector, stop_condition = 'apoge
         F_drag = q * Cd_A_rocket
 
         # update rocket's motion parameters
-        a_x = -F_drag * np.sin(angle_to_vertical) / mass * np.sin(compass_heading)
-        a_y = -F_drag * np.sin(angle_to_vertical) / mass * np.cos(compass_heading)
+        a_x = -F_drag * np.sin(angle_to_vertical) * np.sin(compass_heading) / mass
+        a_y = -F_drag * np.sin(angle_to_vertical) * np.cos(compass_heading) / mass
         a_z = -F_drag * np.cos(angle_to_vertical) / mass - F_gravity
 
         v_x += a_x * timestep
@@ -107,7 +107,7 @@ def sim_coast(rocket, environment, initial_state_vector, stop_condition = 'apoge
         time += timestep
 
         # append updated simulation values
-        simulated_values.append(
+        simulated_states.append(
             (
                 time,
                 x,
@@ -123,9 +123,9 @@ def sim_coast(rocket, environment, initial_state_vector, stop_condition = 'apoge
         )
 
     # interpolate to determine the exact state at the transition and replace the last state with that
-    if len(simulated_values) >= 2:
-        last_state = simulated_values[-1]
-        second_last_state = simulated_values[-2]
+    if len(simulated_states) >= 2:
+        last_state = simulated_states[-1]
+        second_last_state = simulated_states[-2]
 
         t1 = second_last_state[0]
         t2 = last_state[0]
@@ -156,6 +156,6 @@ def sim_coast(rocket, environment, initial_state_vector, stop_condition = 'apoge
         )
 
         # replace the last simulated state with interpolated state
-        simulated_values[-1] = interpolated_state
+        simulated_states[-1] = interpolated_state
 
-    return simulated_values
+    return simulated_states

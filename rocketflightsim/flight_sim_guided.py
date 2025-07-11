@@ -68,7 +68,7 @@ def sim_liftoff_to_rail_clearance(rocket, environment, launchpad, t_liftoff, tim
     F_gravity_rail = F_gravity * rail_unit_vector_z
 
     # simulate flight from liftoff until the launch rail is cleared
-    simulated_values = []
+    simulated_states = []
 
     while z < effective_rail_height:
         # update air properties based on height
@@ -104,7 +104,7 @@ def sim_liftoff_to_rail_clearance(rocket, environment, launchpad, t_liftoff, tim
         time += timestep
 
         # append updated simulation values
-        simulated_values.append(
+        simulated_states.append(
             (
                 time,
                 x,
@@ -120,8 +120,8 @@ def sim_liftoff_to_rail_clearance(rocket, environment, launchpad, t_liftoff, tim
         )
 
     # interpolate to find the exact state at rail clearance
-    last_state = simulated_values[-1]
-    second_last_state = simulated_values[-2]
+    last_state = simulated_states[-1]
+    second_last_state = simulated_states[-2]
 
     # linear interpolation between the last two states
     fraction = (effective_rail_height - second_last_state[3]) / (last_state[3] - second_last_state[3])
@@ -132,10 +132,10 @@ def sim_liftoff_to_rail_clearance(rocket, environment, launchpad, t_liftoff, tim
     )
 
     # replace the last state with the interpolated state
-    simulated_values[-1] = interpolated_state
+    simulated_states[-1] = interpolated_state
 
     # raise a warning if the rocket doesn't clear the rail before burnout
     if time >= rocket.motor.burn_time:
         print("Warning: Rocket did not clear the rail before burnout.")
 
-    return simulated_values
+    return simulated_states

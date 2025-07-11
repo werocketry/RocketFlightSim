@@ -86,7 +86,7 @@ NDRT_2020_environment = Environment(
 NDRT_2020_launchpad = Launchpad(
     rail_length=3.353,
     launch_rail_elevation=90,
-    launch_rail_direction=181
+    launch_rail_heading=181
 )
 NDRT_2020_drogue_parachute = Parachute(
     Cd=1.5,
@@ -393,7 +393,7 @@ Valetudo_environment = Environment(
 Valetudo_launchpad = Launchpad(
     rail_length=5.7,
     launch_rail_elevation=84.7,
-    launch_rail_direction=53
+    launch_rail_heading=53
 )
 Valetudo_drogue_parachute = Parachute(
     Cd = 1.3,
@@ -869,7 +869,7 @@ Juno3_environment = Environment(
 Juno3_launchpad = Launchpad(
     rail_length=5.2,
     launch_rail_elevation=85,
-    launch_rail_direction=105
+    launch_rail_heading=105
 )
 Juno3_drogue_parachute = Parachute(
     Cd = 1,
@@ -968,7 +968,7 @@ Bella_Lui_environment = Environment(
 Bella_Lui_launchpad = Launchpad(
     rail_length=4.2,
     launch_rail_elevation=89,
-    launch_rail_direction=45
+    launch_rail_heading=45
 )
 Bella_Lui_drogue_parachute = Parachute(
     Cd = 1,

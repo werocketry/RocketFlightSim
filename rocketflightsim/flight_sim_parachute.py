@@ -59,7 +59,7 @@ def sim_parachute(rocket, environment, initial_state_vector, parachute, stop_con
     deploy_delay = parachute.deploy_delay
 
     # determine if parachute should be deployed, and if delay is needed, simulate until that time
-    simulated_values = []
+    simulated_states = []
 
     if not parachute.deploy_altitude and not parachute.deploy_delay:
         # unpack the initial state vector
@@ -70,12 +70,12 @@ def sim_parachute(rocket, environment, initial_state_vector, parachute, stop_con
             time, x, y, z, v_x, v_y, v_z = initial_state_vector
         else:
             from . import flight_sim_coast as sim_coast
-            simulated_values = sim_coast.sim_coast(rocket, environment, initial_state_vector, stop_condition = 'below_altitude', stop_condition_value = deploy_altitude)
-            time, x, y, z, v_x, v_y, v_z = simulated_values[-1]
+            simulated_states = sim_coast.sim_coast(rocket, environment, initial_state_vector, stop_condition = 'below_altitude', stop_condition_value = deploy_altitude)
+            time, x, y, z, v_x, v_y, v_z = simulated_states[-1][:7]
     elif not parachute.deploy_altitude and parachute.deploy_delay:
         from . import flight_sim_coast as sim_coast
-        simulated_values = sim_coast.sim_coast(rocket, environment, initial_state_vector, stop_condition = 'after_delay', stop_condition_value = deploy_delay)
-        time, x, y, z, v_x, v_y, v_z = simulated_values[-1][:7]
+        simulated_states = sim_coast.sim_coast(rocket, environment, initial_state_vector, stop_condition = 'after_delay', stop_condition_value = deploy_delay)
+        time, x, y, z, v_x, v_y, v_z = simulated_states[-1][:7]
     else:
         # TODO implement 'both' and 'either' methods
         pass
@@ -133,7 +133,7 @@ def sim_parachute(rocket, environment, initial_state_vector, parachute, stop_con
         time += timestep
 
         # append updated simulation values
-        simulated_values.append(
+        simulated_states.append(
             (
                 time,
                 x,
@@ -148,6 +148,6 @@ def sim_parachute(rocket, environment, initial_state_vector, parachute, stop_con
             )
         )
 
-    return simulated_values
-    # TODO maybe after first implementation, have it determine the exact state (between timesteps) that the transition from chute to no chute occurs, and then again for the transition out of the function
-        # TODO could I make a function for interpolating between states based on any transition condition? Then don't have to repeat it in every flight stage function
+    return simulated_states
+# TODO after first implementation, have it determine the exact state (between timesteps) that the transition from chute to no chute occurs, and then again for the transition out of the function
+    # TODO could I make a function for interpolating between states based on any transition condition? Then don't have to repeat it in every flight stage function
