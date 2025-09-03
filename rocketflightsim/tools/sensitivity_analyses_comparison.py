@@ -10,7 +10,7 @@ Parameters of interest:
     - slight shifts in time of the points in the thrust curve?
 - from the rocket class:
     - rocket mass
-    - Cd_rocket_at_Ma
+    - Cd_rocket
 - from the launch conditions class:
     - launchpad pressure
     - launchpad temperature

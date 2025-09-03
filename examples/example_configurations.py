@@ -84,7 +84,7 @@ example_rocket = Rocket(
     A_rocket = 0.015326, # m^2
     rocket_mass = 15, # kg
     motor = Cesaroni_7579M1520_P,
-    Cd_rocket_at_Ma = 0.4,
+    Cd_rocket = 0.4,
     h_second_rail_button = 0.8  # m
 )
 

@@ -72,7 +72,7 @@ NDRT_2020_rocket = Rocket(
     rocket_mass = 18.998,
     motor = Cesaroni_4895L1395_P,
     A_rocket = np.pi * 0.1015 ** 2,
-    Cd_rocket_at_Ma = 0.44
+    Cd_rocket = 0.44
 )
 NDRT_2020_environment = Environment(
     # as per parameters in the GitHub, and using RocketPy to get launchpad pressure and temp from their weather data file (https://github.com/RocketPy-Team/RocketPy/blob/master/tests/fixtures/acceptance/NDRT_2020/ndrt_2020_weather_data_ERA5.nc)
@@ -377,7 +377,7 @@ Valetudo_rocket = Rocket(
     rocket_mass=8.257,
     motor=keron,
     A_rocket=np.pi*0.04045**2,
-    Cd_rocket_at_Ma = 0.9081/1.05 # TBC:
+    Cd_rocket = 0.9081/1.05 # TBC:
         # they define a drag coefficient of (0.9081/1.05) in the notebook, but they have a few different curves here: https://github.com/RocketPy-Team/RocketPy/tree/master/tests/fixtures/acceptance/PJ_Valetudo
         # none of them were made with CFD, so they're all probably far enough off that it's not worth the effort to spend time on it
 )
@@ -709,7 +709,7 @@ ax2.set_ylabel('Fuel mass (kg)', color='r')
 ax2.tick_params('y', colors='r')
 plt.show()
 """
-def Juno3_Cd_rocket_at_Ma(Ma):
+def Juno3_Cd_rocket(Ma):
     # per their curve at https://github.com/RocketPy-Team/RocketPy/tree/master/data/juno3
     # but adjusted per the following line in their notebook:
         # factor = 0.38 / juno.power_off_drag(0.6)  # From CFD analysis
@@ -844,7 +844,7 @@ def Juno3_Cd_rocket_at_Ma(Ma):
 import numpy as np
 import matplotlib.pyplot as plt
 Ma = np.linspace(0, 1.25, 100)
-Cd = [Juno3_Cd_rocket_at_Ma(m) for m in Ma]
+Cd = [Juno3_Cd_rocket(m) for m in Ma]
 plt.plot(Ma, Cd)
 plt.xlabel("Mach number")
 plt.ylabel("Cd")
@@ -854,7 +854,7 @@ Juno3_rocket = Rocket(
     rocket_mass=24.05,
     motor=mandioca,
     A_rocket=np.pi*0.0655**2,
-    Cd_rocket_at_Ma=Juno3_Cd_rocket_at_Ma
+    Cd_rocket=Juno3_Cd_rocket
 )
 Juno3_environment = Environment(
     # note that launchpad pressure in the GitHub notebook is 84992 Pa, but the SRAD flight computer read 86260.99854 on the ground, and the COTS flight computer read 86170 Pa. Going to stick with 84992, precision of the value makes me think it was measured with some other instrument
@@ -955,7 +955,7 @@ Bella_Lui_rocket = Rocket(
     rocket_mass = 18.227 - 0.001,
     motor=K828FJ,
     A_rocket=np.pi*(156/2000)**2,
-    Cd_rocket_at_Ma=0.43
+    Cd_rocket=0.43
 )
 Bella_Lui_environment = Environment(
     launchpad_pressure=98043,
